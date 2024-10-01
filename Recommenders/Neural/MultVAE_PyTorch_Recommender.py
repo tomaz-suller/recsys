@@ -140,7 +140,27 @@ class _MultiVAEModel(torch.nn.Module):
 class MultVAERecommender_PyTorch(BaseRecommender, Incremental_Training_Early_Stopping):
     """ MultVAERecommender_PyTorch
 
-
+    @inproceedings{DBLP:conf/www/LiangKHJ18,
+      author       = {Dawen Liang and
+                      Rahul G. Krishnan and
+                      Matthew D. Hoffman and
+                      Tony Jebara},
+      editor       = {Pierre{-}Antoine Champin and
+                      Fabien Gandon and
+                      Mounia Lalmas and
+                      Panagiotis G. Ipeirotis},
+      title        = {Variational Autoencoders for Collaborative Filtering},
+      booktitle    = {Proceedings of the 2018 World Wide Web Conference on World Wide Web,
+                      {WWW} 2018, Lyon, France, April 23-27, 2018},
+      pages        = {689--698},
+      publisher    = {{ACM}},
+      year         = {2018},
+      url          = {https://doi.org/10.1145/3178876.3186150},
+      doi          = {10.1145/3178876.3186150},
+      timestamp    = {Fri, 16 Apr 2021 10:04:12 +0200},
+      biburl       = {https://dblp.org/rec/conf/www/LiangKHJ18.bib},
+      bibsource    = {dblp computer science bibliography, https://dblp.org}
+    }
 
     """
 

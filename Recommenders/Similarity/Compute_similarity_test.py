@@ -30,9 +30,6 @@ class MyTestCase(unittest.TestCase):
 
     def test_cosine_similarity_dense(self):
 
-        from Base.Cython.cosine_similarity import Cosine_Similarity as Cosine_Similarity_Cython
-        from Base.cosine_similarity_parallel import Cosine_Similarity_Parallel as Cosine_Similarity_Parallel
-
         TopK = 0
 
         data_matrix = np.array([[1,1,0,1],[0,1,1,1],[1,0,1,0]])

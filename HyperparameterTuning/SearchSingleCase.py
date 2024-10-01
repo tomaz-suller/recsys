@@ -85,6 +85,7 @@ class SearchSingleCase(SearchAbstractClass):
                save_model = "best",
                evaluate_on_test = "best",
                terminate_on_memory_error = True,
+               terminate_on_other_error = False
                ):
 
 
@@ -104,7 +105,8 @@ class SearchSingleCase(SearchAbstractClass):
                                     save_model,
                                     evaluate_on_test,
                                     n_cases,
-                                    terminate_on_memory_error)
+                                    terminate_on_memory_error,
+                                    terminate_on_other_error)
 
 
         self.n_loaded_counter = 0

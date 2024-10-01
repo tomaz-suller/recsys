@@ -345,7 +345,7 @@ class MultVAERecommender(BaseRecommender, Incremental_Training_Early_Stopping, B
 
     def _run_epoch(self, num_epoch):
 
-        user_index_list_train = list(range(self.n_users))
+        user_index_list_train = list(np.arange(0, self.n_users)[np.ediff1d(self.URM_train.indptr) > 0])
 
         np.random.shuffle(user_index_list_train)
 

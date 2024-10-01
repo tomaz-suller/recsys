@@ -78,12 +78,9 @@ class Compute_Similarity:
 
                 elif isinstance(dataMatrix, sps.spmatrix):
                     shape = dataMatrix.shape
-
                     num_cells = shape[0]*shape[1]
-
-                    sparsity = dataMatrix.nnz/num_cells
-
-                    self.dense = sparsity > 0.5
+                    density = dataMatrix.nnz/num_cells
+                    self.dense = density >= 0.1
 
                 else:
                     print("Compute_Similarity: matrix type not recognized, calling default...")

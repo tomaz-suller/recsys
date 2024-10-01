@@ -56,37 +56,36 @@ The code has beend developed for Linux and Windows.
 
 Note that this repository requires Python 3.8
 
-First we suggest you create an environment for this project using conda
+First we suggest you create an environment for this project using virtualenv (or another tool like conda)
 
-First checkout this repository, then enter in the repository folder and run this commands to create and activate a new environment:
-
+First checkout this repository, then enter the repository folder and run this commands to create and activate a new environment, if you are using conda you can create the environment with all the relevant dependencies in the following way:
 ```console
-conda create -n RecSysFramework python=3.8 anaconda
+conda env create -f environment.yml
+```
+
+On some devices the environment fails to solve and cannot be installed, this may be due to the priorities of the conda channels. 
+The workaround is to install separately all the dependencies related to CUDA and PyTorch. To do so remove all rows marked with "pytorch::" and "nvidia::" from the environment.yml file and install it as described previously, then run the following command:
+```console
 conda activate RecSysFramework
+conda install pytorch==1.13.1 torchvision==0.14.1 torchaudio==0.13.1 pytorch-cuda=11.6 cuda-toolkit=11.6 -c pytorch -c nvidia
 ```
 
-Then install all the requirements and dependencies using the following command.
-```console
-pip install -r requirements.txt
-```
-
-At this point you have to compile all Cython algorithms.
-In order to compile you must first have installed: _gcc_ and _python3 dev_. Under Linux those can be installed with the following commands:
+In order to compile the Cython algorithms you must have installed: _gcc_ and _python3 dev_, which can be installed with the following commands:
 ```console
 sudo apt install gcc 
 sudo apt-get install python3-dev
 ```
-If you are using Windows as operating system, the installation procedure is a bit more complex. You may refer to [THIS](https://github.com/cython/cython/wiki/InstallingOnWindows) guide.
 
-Now you can compile all Cython algorithms by running the following command. The script will compile within the current active environment. The code has been developed for Linux and Windows platforms. During the compilation you may see some warnings. 
- 
-```console
+At this point you can compile all Cython algorithms by running the following command. The script will compile within the current active environment. The code has been developed for Linux and Windows platforms. During the compilation you may see some warnings. 
+ ```console
 python run_compile_all_cython.py
 ```
 
+
+
 If you are importing this repository on a Kaggle notebook, try to compile like this:
 ```console
-!git clone https://github.com/MaurizioFD/RecSys_Course_AT_PoliMi
+!git clone https://github.com/recsyspolimi/RecSys_Course_AT_PoliMi
 cd RecSys_Course_AT_PoliMi
 !python run_compile_all_cython.py
 ```

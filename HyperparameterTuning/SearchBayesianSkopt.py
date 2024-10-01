@@ -258,6 +258,7 @@ class SearchBayesianSkopt(SearchAbstractClass):
                evaluate_on_test = "best",
                max_total_time = None,
                terminate_on_memory_error = True,
+               terminate_on_other_error = False,
                ):
         """
 
@@ -293,7 +294,8 @@ class SearchBayesianSkopt(SearchAbstractClass):
                                     save_model,
                                     evaluate_on_test,
                                     n_cases,
-                                    terminate_on_memory_error)
+                                    terminate_on_memory_error,
+                                    terminate_on_other_error)
 
 
         self.n_random_starts = n_random_starts
@@ -360,7 +362,7 @@ class SearchBayesianSkopt(SearchAbstractClass):
         except ValueError as e:
             traceback.print_exc()
             self._write_log("{}: Search interrupted due to ValueError. The evaluated configurations may have had all the same value.\n".format(self.ALGORITHM_NAME))
-            return
+            # return
 
         except NoValidConfigError as e:
             self._write_log("{}: Search interrupted. {}\n".format(self.ALGORITHM_NAME, e))

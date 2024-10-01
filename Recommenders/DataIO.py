@@ -43,13 +43,34 @@ class DataIO(object):
     def __init__(self, folder_path):
         super(DataIO, self).__init__()
 
-        self._is_windows = platform.system() == "Windows"
+        self.folder_path = folder_path if folder_path[-1] == "/" or folder_path[-1] == "\\" else folder_path + "/"
 
-        self.folder_path = folder_path if folder_path[-1] == "/" else folder_path + "/"
+        if "\\..\\" in self.folder_path or "/../" in self.folder_path:
+            raise ValueError("To ensure portability path cannot contain relative paths such as '\\..\\' or '/../'")
+
         self._key_string_alert_done = False
 
-        # if self._is_windows:
-        #     self.folder_path = "\\\\?\\" + self.folder_path
+        self._is_windows = platform.system() == "Windows"
+
+        if self._is_windows:
+            """
+            On Windows the path length is limited to 255 or so characters. To avoid this limit a path must satisfy three conditions:
+            - Be an absolute path (and do not contain any relative subpaths like \\..\\)
+            - Only contain '\\' and no '/'
+            - Start with '\\\\?\\'
+            """
+
+            # This is done only for Windows because Linux does not like paths with "//"
+            self.folder_path = self.folder_path.replace("/", "\\")
+
+            if not os.path.isabs(self.folder_path):
+                self.folder_path = self.folder_path if self.folder_path[0] != '.' else self.folder_path[1:]
+                self.folder_path = self.folder_path if self.folder_path[0] != '\\' else self.folder_path[1:]
+                # For the join to work correctly the second term does not have to be an absolute path (must not have \\ at the beginning)
+                self.folder_path = os.path.join(os.getcwd(), self.folder_path)
+
+            if not self.folder_path.startswith("\\\\?\\"):
+                self.folder_path = "\\\\?\\" + self.folder_path
 
 
     def _print(self, message):
@@ -64,7 +85,7 @@ class DataIO(object):
 
         # Ignore the .zip extension
         file_name = file_name[:-4]
-        current_temp_folder = "{}{}_{}_{}/".format(self.folder_path, self._DEFAULT_TEMP_FOLDER, os.getpid(), file_name)
+        current_temp_folder = "{}{}_{}_{}{}".format(self.folder_path, self._DEFAULT_TEMP_FOLDER, os.getpid(), file_name, "\\" if self._is_windows else "/")
 
         if os.path.exists(current_temp_folder):
             self._print("Folder {} already exists, could be the result of a previous failed save attempt or multiple saver are active in parallel. " \
@@ -172,8 +193,8 @@ class DataIO(object):
 
                 absolute_path = current_file_path + ".json" if current_file_path.startswith(os.getcwd()) else os.getcwd() + current_file_path + ".json"
 
-                assert not self._is_windows or (self._is_windows and len(absolute_path) <= self._MAX_PATH_LENGTH_WINDOWS), \
-                    "DataIO: Path of file exceeds {} characters, which is the maximum allowed under standard paths for Windows.".format(self._MAX_PATH_LENGTH_WINDOWS)
+                # assert not self._is_windows or (self._is_windows and len(absolute_path) <= self._MAX_PATH_LENGTH_WINDOWS), \
+                #     "DataIO: Path of file exceeds {} characters, which is the maximum allowed under standard paths for Windows.".format(self._MAX_PATH_LENGTH_WINDOWS)
 
 
                 with open(current_file_path + ".json", 'w') as outfile:

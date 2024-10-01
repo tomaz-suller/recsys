@@ -52,7 +52,7 @@ class DataSplitter(object):
         """
         super(DataSplitter, self).__init__()
 
-        self.DATASET_SPLIT_ROOT_FOLDER = os.path.join(os.path.dirname(__file__), '..', self.__DATASET_SPLIT_SUBFOLDER)
+        self.DATASET_SPLIT_ROOT_FOLDER = os.path.join(os.path.split(os.path.dirname(__file__))[0], self.__DATASET_SPLIT_SUBFOLDER)
 
         self.dataReader_object = dataReader_object
         self.forbid_new_split = forbid_new_split

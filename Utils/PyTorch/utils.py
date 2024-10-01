@@ -54,6 +54,8 @@ def get_optimizer(optimizer_label, model, learning_rate, l2_reg):
         return torch.optim.RMSprop(model.parameters(), lr = learning_rate, weight_decay = l2_reg)
     elif optimizer_label.lower() == "adam":
         return torch.optim.Adam(model.parameters(), lr = learning_rate, weight_decay = l2_reg)
+    elif optimizer_label.lower() == "adam-w":
+        return torch.optim.AdamW(model.parameters(), lr = learning_rate, weight_decay = l2_reg)
     elif optimizer_label.lower() == "sgd":
         return torch.optim.SGD(model.parameters(), lr = learning_rate, weight_decay = l2_reg)
     else:
@@ -70,7 +72,7 @@ def _sps_to_coo_tensor(URM_train, device):
 
 def clone_pytorch_model_to_numpy_dict(model):
 
-    cloned_state_dict = copy.deepcopy(model.state_dict())
-    cloned_state_dict = {key:val.detach().cpu().numpy() for key,val in cloned_state_dict.items()}
+    # method detach() returns a copy of the tensor
+    cloned_state_dict = {key:val.detach().cpu().numpy() for key,val in model.state_dict().items()}
 
     return cloned_state_dict

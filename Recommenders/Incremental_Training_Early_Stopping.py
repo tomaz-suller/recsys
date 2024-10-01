@@ -97,7 +97,7 @@ class Incremental_Training_Early_Stopping(object):
         :return:
         """
 
-        results_run["epoch"] = epochs_current + 1
+        results_run["epoch"] = epochs_current
         results_run.reset_index(level=0, inplace = True)
         results_run.set_index('epoch', inplace = True)
 
@@ -189,22 +189,22 @@ class Incremental_Training_Early_Stopping(object):
         lower_validatons_count = 0
         convergence = False
 
-        self.epochs_best = 0
+        self.epochs_best = 1
         self._earlystopping_validation_summary_df = None
 
-        epochs_current = 0
+        epochs_current = 1
 
-        while epochs_current < epochs_max and not convergence:
+        while epochs_current <= epochs_max and not convergence:
 
             self._run_epoch(epochs_current)
 
             # If no validation required, always keep the latest
             if evaluator_object is None:
 
-                self.epochs_best = epochs_current +1
+                self.epochs_best = epochs_current
 
             # Determine whether a validaton step is required
-            elif (epochs_current + 1) % validation_every_n == 0:
+            elif epochs_current % validation_every_n == 0:
 
                 print("{}: Validation begins...".format(algorithm_name))
 
@@ -235,7 +235,7 @@ class Incremental_Training_Early_Stopping(object):
                     self.best_validation_metric = current_metric_value
                     self._update_best_model()
 
-                    self.epochs_best = epochs_current +1
+                    self.epochs_best = epochs_current
                     lower_validatons_count = 0
 
                 else:
@@ -249,19 +249,22 @@ class Incremental_Training_Early_Stopping(object):
                     new_time_value, new_time_unit = seconds_to_biggest_unit(elapsed_time)
 
                     print("{}: Convergence reached! Terminating at epoch {}. Best value for '{}' at epoch {} is {:.4f}. Elapsed time {:.2f} {}".format(
-                        algorithm_name, epochs_current+1, validation_metric, self.epochs_best, self.best_validation_metric, new_time_value, new_time_unit))
+                        algorithm_name, epochs_current, validation_metric, self.epochs_best, self.best_validation_metric, new_time_value, new_time_unit))
 
 
             elapsed_time = time.time() - start_time
             new_time_value, new_time_unit = seconds_to_biggest_unit(elapsed_time)
 
             print("{}: Epoch {} of {}. Elapsed time {:.2f} {}".format(
-                algorithm_name, epochs_current+1, epochs_max, new_time_value, new_time_unit))
+                algorithm_name, epochs_current, epochs_max, new_time_value, new_time_unit))
 
             epochs_current += 1
 
             sys.stdout.flush()
             sys.stderr.flush()
+
+        # The last epoch to be done is the previous one (due to the while condition)
+        epochs_current -= 1
 
         # If no validation required, keep the latest
         if evaluator_object is None:

@@ -22,6 +22,13 @@ try:
 except ImportError:
     print("Tensorflow is not available")
 
+try:
+    import torch
+    MEMORY_ERROR_EXCEPTION_TUPLE += (torch.cuda.OutOfMemoryError,)
+except ImportError:
+    pass
+
+OTHER_ERROR_EXCEPTION_TUPLE = (ValueError,)
 
 
 def create_result_multiindex_dataframe(n_cases, result_df):
@@ -169,6 +176,7 @@ class SearchAbstractClass(object):
                evaluate_on_test = "best",
                save_metadata = True,
                terminate_on_memory_error = True,
+               terminate_on_other_error = False,
                ):
 
         raise NotImplementedError("Function search not implemented for this class")
@@ -195,7 +203,8 @@ class SearchAbstractClass(object):
                                save_model,
                                evaluate_on_test,
                                n_cases,
-                               terminate_on_memory_error):
+                               terminate_on_memory_error,
+                               terminate_on_other_error):
 
 
         if save_model not in self._SAVE_MODEL_VALUES:
@@ -226,6 +235,7 @@ class SearchAbstractClass(object):
         self.cutoff_to_optimize = cutoff_to_optimize
         self.resume_from_saved = resume_from_saved
         self.terminate_on_memory_error = terminate_on_memory_error
+        self.terminate_on_other_error = terminate_on_other_error
         self.save_metadata = save_metadata
         self.save_model = save_model
         self.evaluate_on_test = "no" if self.evaluator_test is None else evaluate_on_test
@@ -430,7 +440,7 @@ class SearchAbstractClass(object):
         hyperparameters_best_args = self.metadata_dict["hyperparameters_best"].copy()
 
         recommender_instance.fit(*self.recommender_input_args_last_test.FIT_POSITIONAL_ARGS,
-                                 **self.recommender_input_args.FIT_KEYWORD_ARGS,
+                                 **self.recommender_input_args_last_test.FIT_KEYWORD_ARGS,
                                  **hyperparameters_best_args)
 
         train_time = time.time() - start_time
@@ -540,7 +550,14 @@ class SearchAbstractClass(object):
 
         # Catch exception only if terminate_on_memory_error is True
         except MEMORY_ERROR_EXCEPTION_TUPLE if self.terminate_on_memory_error else (NeverMatch) as e:
+            traceback.print_exc()
             self._print("{}: Search for '{}' interrupted due to MemoryError.".format(self.ALGORITHM_NAME, self.metadata_dict["algorithm_name_recommender"]))
+            return
+
+        # Catch exception only if terminate_on_other_error is True
+        except OTHER_ERROR_EXCEPTION_TUPLE if self.terminate_on_other_error else (NeverMatch) as e:
+            traceback.print_exc()
+            self._print("{}: Search for '{}' interrupted due to an Error.".format(self.ALGORITHM_NAME, self.metadata_dict["algorithm_name_recommender"]))
             return
 
         except:

@@ -78,13 +78,14 @@ class Compute_Similarity_Python:
 
     def __init__(self, dataMatrix, topK=100, shrink = 0, normalize = True,
                  asymmetric_alpha = 0.5, tversky_alpha = 1.0, tversky_beta = 1.0,
-                 similarity = "cosine", row_weights = None):
+                 similarity = "cosine", row_weights = None, use_dense = False):
         """
         Computes the cosine similarity on the columns of dataMatrix
         If it is computed on URM=|users|x|items|, pass the URM as is.
         If it is computed on ICM=|items|x|features|, pass the ICM transposed.
         :param dataMatrix:
         :param topK:
+        :param use_dense:           If True returns dense numpy similarity
         :param shrink:
         :param normalize:           If True divide the dot product by the product of the norms
         :param row_weights:         Multiply the values in each row by a specified value. Array
@@ -111,13 +112,16 @@ class Compute_Similarity_Python:
         self.normalize = normalize
 
         self.n_rows, self.n_columns = dataMatrix.shape
+
+        assert topK >= 0 and topK <= self.n_columns, "TopK must be between 0 and the number of columns"
         self.topK = min(topK, self.n_columns)
+        self.use_dense = use_dense
 
         self.asymmetric_alpha = asymmetric_alpha
         self.tversky_alpha = tversky_alpha
         self.tversky_beta = tversky_beta
 
-        self.dataMatrix = dataMatrix.copy()
+        self.dataMatrix = dataMatrix.astype(np.float32)
 
         self.adjusted_cosine = False
         self.asymmetric_cosine = False
@@ -153,11 +157,9 @@ class Compute_Similarity_Python:
                              "dice, tversky."
                              " Passed value was '{}'".format(similarity))
 
-
         self.use_row_weights = False
 
         if row_weights is not None:
-
             if dataMatrix.shape[0] != len(row_weights):
                 raise ValueError("Cosine_Similarity: provided row_weights and dataMatrix have different number of rows."
                                  "Col_weights has {} columns, dataMatrix has {}.".format(len(row_weights), dataMatrix.shape[0]))
@@ -168,9 +170,8 @@ class Compute_Similarity_Python:
 
             self.dataMatrix_weighted = self.dataMatrix.T.dot(self.row_weights_diag).T
 
-
-
-
+        if self.use_dense:
+            self.W_dense = np.zeros((self.n_columns,self.n_columns))
 
 
     def applyAdjustedCosine(self):
@@ -181,7 +182,6 @@ class Compute_Similarity_Python:
 
         self.dataMatrix = recommender_utils.check_matrix(self.dataMatrix, 'csr')
 
-
         interactionsPerRow = np.diff(self.dataMatrix.indptr)
 
         nonzeroRows = interactionsPerRow > 0
@@ -190,13 +190,10 @@ class Compute_Similarity_Python:
         rowAverage = np.zeros_like(sumPerRow)
         rowAverage[nonzeroRows] = sumPerRow[nonzeroRows] / interactionsPerRow[nonzeroRows]
 
-
         # Split in blocks to avoid duplicating the whole data structure
         start_row = 0
-        end_row= 0
-
+        end_row = 0
         blockSize = 1000
-
 
         while end_row < self.n_rows:
 
@@ -208,8 +205,6 @@ class Compute_Similarity_Python:
             start_row += blockSize
 
 
-
-
     def applyPearsonCorrelation(self):
         """
         Remove from every data point the average for the corresponding column
@@ -217,7 +212,6 @@ class Compute_Similarity_Python:
         """
 
         self.dataMatrix = recommender_utils.check_matrix(self.dataMatrix, 'csc')
-
 
         interactionsPerCol = np.diff(self.dataMatrix.indptr)
 
@@ -227,13 +221,10 @@ class Compute_Similarity_Python:
         colAverage = np.zeros_like(sumPerCol)
         colAverage[nonzeroCols] = sumPerCol[nonzeroCols] / interactionsPerCol[nonzeroCols]
 
-
         # Split in blocks to avoid duplicating the whole data structure
         start_col = 0
-        end_col= 0
-
+        end_col = 0
         blockSize = 1000
-
 
         while end_col < self.n_columns:
 
@@ -249,10 +240,8 @@ class Compute_Similarity_Python:
 
         # Split in blocks to avoid duplicating the whole data structure
         start_pos = 0
-        end_pos= 0
-
+        end_pos = 0
         blockSize = 1000
-
 
         while end_pos < len(self.dataMatrix.data):
 
@@ -280,7 +269,6 @@ class Compute_Similarity_Python:
         start_time_print_batch = start_time
         processed_items = 0
 
-
         if self.adjusted_cosine:
             self.applyAdjustedCosine()
 
@@ -290,10 +278,8 @@ class Compute_Similarity_Python:
         elif self.tanimoto_coefficient or self.dice_coefficient or self.tversky_coefficient:
             self.useOnlyBooleanInteractions()
 
-
         # We explore the matrix column-wise
         self.dataMatrix = recommender_utils.check_matrix(self.dataMatrix, 'csc')
-
 
         # Compute sum of squared values to be used in normalization
         sum_of_squared = np.array(self.dataMatrix.power(2).sum(axis=0)).ravel()
@@ -302,11 +288,9 @@ class Compute_Similarity_Python:
         if not (self.tanimoto_coefficient or self.dice_coefficient or self.tversky_coefficient):
             sum_of_squared = np.sqrt(sum_of_squared)
 
-
         if self.asymmetric_cosine:
             sum_of_squared_to_alpha = np.power(sum_of_squared + 1e-6, 2 * self.asymmetric_alpha)
             sum_of_squared_to_1_minus_alpha = np.power(sum_of_squared + 1e-6, 2 * (1 - self.asymmetric_alpha))
-
 
         self.dataMatrix = recommender_utils.check_matrix(self.dataMatrix, 'csc')
 
@@ -320,10 +304,7 @@ class Compute_Similarity_Python:
             end_col_local = end_col
 
 
-
-
         start_col_block = start_col_local
-
         this_block_size = 0
 
         # Compute all similarities for each item using vectorization
@@ -350,7 +331,6 @@ class Compute_Similarity_Python:
                     this_column_weights = this_block_weights.ravel()
                 else:
                     this_column_weights = this_block_weights[:,col_index_in_block]
-
 
                 columnIndex = col_index_in_block + start_col_block
                 this_column_weights[columnIndex] = 0.0
@@ -386,18 +366,22 @@ class Compute_Similarity_Python:
                     this_column_weights = this_column_weights/self.shrink
 
                 # Sort indices and select topK, partition the data to extract the set of relevant items
-                relevant_items_partition = np.argpartition(-this_column_weights, self.topK - 1, axis=0)[0:self.topK]
-                this_column_weights = this_column_weights[relevant_items_partition]
+                if self.use_dense:
+                    self.W_dense[:, columnIndex] = this_column_weights
 
-                # Incrementally build sparse matrix, do not add zeros
-                if np.any(this_column_weights == 0.0):
-                    non_zero_mask = this_column_weights != 0.0
-                    relevant_items_partition = relevant_items_partition[non_zero_mask]
-                    this_column_weights = this_column_weights[non_zero_mask]
+                else:
+                    relevant_items_partition = np.argpartition(-this_column_weights, self.topK - 1, axis=0)[0:self.topK]
+                    this_column_weights = this_column_weights[relevant_items_partition]
 
-                similarity_builder.add_data_lists(row_list_to_add=relevant_items_partition,
-                                                  col_list_to_add=np.ones(len(relevant_items_partition), dtype = np.int) * columnIndex,
-                                                  data_list_to_add=this_column_weights)
+                    # Incrementally build sparse matrix, do not add zeros
+                    if np.any(this_column_weights == 0.0):
+                        non_zero_mask = this_column_weights != 0.0
+                        relevant_items_partition = relevant_items_partition[non_zero_mask]
+                        this_column_weights = this_column_weights[non_zero_mask]
+
+                    similarity_builder.add_data_lists(row_list_to_add=relevant_items_partition,
+                                                      col_list_to_add=np.ones(len(relevant_items_partition), dtype = np.int32) * columnIndex,
+                                                      data_list_to_add=this_column_weights)
 
             # Add previous block size
             start_col_block += this_block_size
@@ -415,8 +399,10 @@ class Compute_Similarity_Python:
 
                 start_time_print_batch = time.time()
 
+            # End while on columns
 
-        # End while on columns
-        W_sparse = similarity_builder.get_SparseMatrix()
-
-        return W_sparse
+        if self.use_dense:
+            return self.W_dense
+        else:
+            W_sparse = similarity_builder.get_SparseMatrix()
+            return W_sparse

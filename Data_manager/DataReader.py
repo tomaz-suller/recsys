@@ -57,8 +57,8 @@ class DataReader(object):
     def __init__(self, reload_from_original_data = False):
         super(DataReader, self).__init__()
 
-        self.DATASET_SPLIT_ROOT_FOLDER = os.path.join(os.path.dirname(__file__), '..', self.__DATASET_SPLIT_SUBFOLDER)
-        self.DATASET_OFFLINE_ROOT_FOLDER = os.path.join(os.path.dirname(__file__), '..', self.__DATASET_OFFLINE_SUBFOLDER)
+        self.DATASET_SPLIT_ROOT_FOLDER = os.path.join(os.path.split(os.path.dirname(__file__))[0], self.__DATASET_SPLIT_SUBFOLDER)
+        self.DATASET_OFFLINE_ROOT_FOLDER = os.path.join(os.path.split(os.path.dirname(__file__))[0], self.__DATASET_OFFLINE_SUBFOLDER)
 
         self.reload_from_original_data = reload_from_original_data
         if self.reload_from_original_data:

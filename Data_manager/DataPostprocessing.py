@@ -19,18 +19,17 @@ class DataPostprocessing(DataReader):
 
         self.dataReader_object = dataReader_object
 
-
     def get_loaded_ICM_names(self):
         return self.dataReader_object.get_loaded_ICM_names()
 
+    def get_loaded_UCM_names(self):
+        return self.dataReader_object.get_loaded_UCM_names()
 
     def _get_dataset_name(self):
         return self.dataReader_object._get_dataset_name()
 
-
     def _get_dataset_name_root(self):
         return self.dataReader_object._get_dataset_name_root()
-
 
     def is_implicit(self):
         return self.dataReader_object.is_implicit()

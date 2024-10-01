@@ -36,12 +36,12 @@ class NMFRecommender(BaseMatrixFactorizationRecommender):
 
     def fit(self, num_factors=100,
             l1_ratio = 0.5,
-            solver = "multiplicative_update",
             init_type = "random",
-            beta_loss = "frobenius",
+            solver_beta_loss = None,
             verbose = False,
             random_seed = None):
 
+        solver, beta_loss = solver_beta_loss.split(":")
 
         assert l1_ratio>= 0 and l1_ratio<=1, "{}: l1_ratio must be between 0 and 1, provided value was {}".format(self.RECOMMENDER_NAME, l1_ratio)
 
