@@ -6,13 +6,10 @@ Created on 24/12/2022
 @author: Maurizio Ferrari Dacrema
 """
 
-
-
 import scipy.sparse as sps
 import numpy as np
 import torch
 from torch.utils.data import Dataset
-
 
 
 class InteractionSampler(Dataset):
@@ -30,7 +27,6 @@ class InteractionSampler(Dataset):
         self._row = torch.tensor(URM_train.row).type(torch.LongTensor)
         self._col = torch.tensor(URM_train.col).type(torch.LongTensor)
         self._data = torch.tensor(URM_train.data).type(torch.FloatTensor)
-
 
     def __len__(self):
         return len(self._row)
@@ -54,16 +50,19 @@ class BPRSampler(Dataset):
         self._URM_train = sps.csr_matrix(URM_train)
         self.n_users, self.n_items = self._URM_train.shape
 
-        self.warm_user_index_to_original_id = np.arange(0, self.n_users, dtype=np.int64)[np.ediff1d(sps.csr_matrix(self._URM_train).indptr) > 0]
+        self.warm_user_index_to_original_id = np.arange(
+            0, self.n_users, dtype=np.int64
+        )[np.ediff1d(sps.csr_matrix(self._URM_train).indptr) > 0]
 
     def __len__(self):
         return len(self.warm_user_index_to_original_id)
 
     def __getitem__(self, user_index):
-
         user_id = self.warm_user_index_to_original_id[user_index]
 
-        seen_items = self._URM_train.indices[self._URM_train.indptr[user_id]:self._URM_train.indptr[user_id+1]]
+        seen_items = self._URM_train.indices[
+            self._URM_train.indptr[user_id] : self._URM_train.indptr[user_id + 1]
+        ]
         item_positive = np.random.choice(seen_items)
 
         # seen_items = set(list(seen_items))
@@ -106,11 +105,12 @@ class InteractionAndNegativeSampler(Dataset):
         return self._URM_train.nnz
 
     def __getitem__(self, index):
-
         user_id = self._row[index]
         item_positive = self._col[index]
 
-        seen_items = self._URM_train.indices[self._URM_train.indptr[user_id]:self._URM_train.indptr[user_id+1]]
+        seen_items = self._URM_train.indices[
+            self._URM_train.indptr[user_id] : self._URM_train.indptr[user_id + 1]
+        ]
 
         negative_selected = False
 
@@ -122,5 +122,3 @@ class InteractionAndNegativeSampler(Dataset):
                 negative_selected = True
 
         return user_id, item_positive, item_negative.astype(np.int64)
-
-

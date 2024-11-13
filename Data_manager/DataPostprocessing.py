@@ -34,7 +34,6 @@ class DataPostprocessing(DataReader):
     def is_implicit(self):
         return self.dataReader_object.is_implicit()
 
-
     def _get_dataset_name_data_subfolder(self):
         """
         Returns the subfolder inside the dataset folder tree which contains the specific data to be loaded
@@ -43,12 +42,15 @@ class DataPostprocessing(DataReader):
 
         :return: Dataset_name/
         """
-        raise NotImplementedError("DataReaderPostprocessing: The following method was not implemented for the required class.")
-
+        raise NotImplementedError(
+            "DataReaderPostprocessing: The following method was not implemented for the required class."
+        )
 
     def _load_from_original_file(self):
         """
         _load_from_original_file will call the load of the dataset and then apply on it the postprocessing required
         :return:
         """
-        raise NotImplementedError("DataReaderPostprocessing: The following method was not implemented for the required class.")
+        raise NotImplementedError(
+            "DataReaderPostprocessing: The following method was not implemented for the required class."
+        )

@@ -5,14 +5,17 @@
 @author: Maurizio Ferrari Dacrema
 """
 
-from Recommenders.Similarity.Compute_Similarity_Python import Incremental_Similarity_Builder
+from Recommenders.Similarity.Compute_Similarity_Python import (
+    Incremental_Similarity_Builder,
+)
 
 import numpy as np
 import scipy.sparse as sps
 import time
 import os
 
-def check_matrix(X, format='csc', dtype=np.float32):
+
+def check_matrix(X, format="csc", dtype=np.float32):
     """
     This function takes a matrix as input and transforms it into the specified format.
     The matrix in input can be either sparse or ndarray.
@@ -24,23 +27,22 @@ def check_matrix(X, format='csc', dtype=np.float32):
     :return:
     """
 
-
-    if format == 'csc' and not isinstance(X, sps.csc_matrix):
+    if format == "csc" and not isinstance(X, sps.csc_matrix):
         return X.tocsc().astype(dtype)
-    elif format == 'csr' and not isinstance(X, sps.csr_matrix):
+    elif format == "csr" and not isinstance(X, sps.csr_matrix):
         return X.tocsr().astype(dtype)
-    elif format == 'coo' and not isinstance(X, sps.coo_matrix):
+    elif format == "coo" and not isinstance(X, sps.coo_matrix):
         return X.tocoo().astype(dtype)
-    elif format == 'dok' and not isinstance(X, sps.dok_matrix):
+    elif format == "dok" and not isinstance(X, sps.dok_matrix):
         return X.todok().astype(dtype)
-    elif format == 'bsr' and not isinstance(X, sps.bsr_matrix):
+    elif format == "bsr" and not isinstance(X, sps.bsr_matrix):
         return X.tobsr().astype(dtype)
-    elif format == 'dia' and not isinstance(X, sps.dia_matrix):
+    elif format == "dia" and not isinstance(X, sps.dia_matrix):
         return X.todia().astype(dtype)
-    elif format == 'lil' and not isinstance(X, sps.lil_matrix):
+    elif format == "lil" and not isinstance(X, sps.lil_matrix):
         return X.tolil().astype(dtype)
 
-    elif format == 'npy':
+    elif format == "npy":
         if sps.issparse(X):
             return X.toarray().astype(dtype)
         else:
@@ -54,7 +56,7 @@ def check_matrix(X, format='csc', dtype=np.float32):
         return X.astype(dtype)
 
 
-def similarityMatrixTopK(item_weights, k=100, verbose = False, use_absolute_values = False):
+def similarityMatrixTopK(item_weights, k=100, verbose=False, use_absolute_values=False):
     """
     The function selects the TopK most similar elements, column-wise
 
@@ -66,10 +68,14 @@ def similarityMatrixTopK(item_weights, k=100, verbose = False, use_absolute_valu
     :return:
     """
 
-    assert (item_weights.shape[0] == item_weights.shape[1]), "selectTopK: ItemWeights is not a square matrix"
+    assert (
+        item_weights.shape[0] == item_weights.shape[1]
+    ), "selectTopK: ItemWeights is not a square matrix"
 
     n_items = item_weights.shape[0]
-    similarity_builder = Incremental_Similarity_Builder(n_items, initial_data_block=n_items*k, dtype = np.float32)
+    similarity_builder = Incremental_Similarity_Builder(
+        n_items, initial_data_block=n_items * k, dtype=np.float32
+    )
 
     start_time = time.time()
 
@@ -81,35 +87,32 @@ def similarityMatrixTopK(item_weights, k=100, verbose = False, use_absolute_valu
 
     # iterate over each column and keep only the top-k similar items
     if sparse_weights:
-        item_weights = check_matrix(item_weights, format='csc', dtype=np.float32)
-
+        item_weights = check_matrix(item_weights, format="csc", dtype=np.float32)
 
     for item_idx in range(n_items):
-
         if sparse_weights:
             start_position = item_weights.indptr[item_idx]
-            end_position = item_weights.indptr[item_idx+1]
+            end_position = item_weights.indptr[item_idx + 1]
 
             column_data = item_weights.data[start_position:end_position]
             column_row_index = item_weights.indices[start_position:end_position]
 
         else:
-            column_data = item_weights[:,item_idx]
+            column_data = item_weights[:, item_idx]
             column_row_index = np.arange(n_items, dtype=np.int32)
 
-        if np.any(column_data==0):
-            non_zero_data = column_data!=0
+        if np.any(column_data == 0):
+            non_zero_data = column_data != 0
             column_data = column_data[non_zero_data]
             column_row_index = column_row_index[non_zero_data]
-
 
         # If there is less data than k, there is no need to sort
         if k < len(column_data):
             # Use argpartition because I only need to select "which" are the topK elements, I do not need their exact order
             if use_absolute_values:
-                top_k_idx = np.argpartition(-np.abs(column_data), k-1, axis=0)[:k]
+                top_k_idx = np.argpartition(-np.abs(column_data), k - 1, axis=0)[:k]
             else:
-                top_k_idx = np.argpartition(-column_data, k-1, axis=0)[:k]
+                top_k_idx = np.argpartition(-column_data, k - 1, axis=0)[:k]
 
             try:
                 column_row_index = column_row_index[top_k_idx]
@@ -117,27 +120,28 @@ def similarityMatrixTopK(item_weights, k=100, verbose = False, use_absolute_valu
             except:
                 pass
 
-
-        similarity_builder.add_data_lists(row_list_to_add = column_row_index,
-                                          col_list_to_add = np.ones(len(column_row_index), dtype = np.int32) * item_idx,
-                                          data_list_to_add = column_data)
-
-
+        similarity_builder.add_data_lists(
+            row_list_to_add=column_row_index,
+            col_list_to_add=np.ones(len(column_row_index), dtype=np.int32) * item_idx,
+            data_list_to_add=column_data,
+        )
 
     if verbose:
-        print("Sparse TopK matrix generated in {:.2f} seconds".format(time.time() - start_time))
+        print(
+            "Sparse TopK matrix generated in {:.2f} seconds".format(
+                time.time() - start_time
+            )
+        )
 
     return similarity_builder.get_SparseMatrix()
 
 
-
-
 def areURMequals(URM1, URM2):
-
-    if(URM1.shape != URM2.shape):
+    if URM1.shape != URM2.shape:
         return False
 
-    return (URM1-URM2).nnz ==0
+    return (URM1 - URM2).nnz == 0
+
 
 #
 # def removeTopPop(URM_1, URM_2=None, percentageToRemove=0.2):
@@ -179,7 +183,6 @@ def areURMequals(URM1, URM2):
 
 
 def addZeroSamples(S_matrix, numSamplesToAdd):
-
     n_items = S_matrix.shape[1]
 
     S_matrix_coo = S_matrix.tocoo()
@@ -193,13 +196,11 @@ def addZeroSamples(S_matrix, numSamplesToAdd):
     addedSamples = 0
     consecutiveFailures = 0
 
-    while (addedSamples < numSamplesToAdd):
-
+    while addedSamples < numSamplesToAdd:
         item1 = np.random.randint(0, n_items)
         item2 = np.random.randint(0, n_items)
 
-        if (item1 != item2 and (item1, item2) not in existingSamples):
-
+        if item1 != item2 and (item1, item2) not in existingSamples:
             row_index.append(item1)
             col_index.append(item2)
             data.append(0)
@@ -212,31 +213,28 @@ def addZeroSamples(S_matrix, numSamplesToAdd):
         else:
             consecutiveFailures += 1
 
-        if (consecutiveFailures >= 100):
+        if consecutiveFailures >= 100:
             raise SystemExit(
-                "Unable to generate required zero samples, termination at 100 consecutive discarded samples")
+                "Unable to generate required zero samples, termination at 100 consecutive discarded samples"
+            )
 
     return row_index, col_index, data
 
 
 def reshapeSparse(sparseMatrix, newShape):
-
     if sparseMatrix.shape[0] > newShape[0] or sparseMatrix.shape[1] > newShape[1]:
-        ValueError("New shape cannot be smaller than SparseMatrix. SparseMatrix shape is: {}, newShape is {}".format(
-            sparseMatrix.shape, newShape))
-
+        ValueError(
+            "New shape cannot be smaller than SparseMatrix. SparseMatrix shape is: {}, newShape is {}".format(
+                sparseMatrix.shape, newShape
+            )
+        )
 
     sparseMatrix = sparseMatrix.tocoo()
-    newMatrix = sps.csr_matrix((sparseMatrix.data, (sparseMatrix.row, sparseMatrix.col)), shape=newShape)
+    newMatrix = sps.csr_matrix(
+        (sparseMatrix.data, (sparseMatrix.row, sparseMatrix.col)), shape=newShape
+    )
 
     return newMatrix
-
-
-
-
-
-
-
 
 
 def get_unique_temp_folder(input_temp_folder_path):
@@ -254,10 +252,10 @@ def get_unique_temp_folder(input_temp_folder_path):
     counter_suffix = 0
 
     while os.path.isdir(progressive_temp_folder_name):
-
         counter_suffix += 1
-        progressive_temp_folder_name = input_temp_folder_path + "_" + str(counter_suffix)
-
+        progressive_temp_folder_name = (
+            input_temp_folder_path + "_" + str(counter_suffix)
+        )
 
     progressive_temp_folder_name += "/"
     os.makedirs(progressive_temp_folder_name)

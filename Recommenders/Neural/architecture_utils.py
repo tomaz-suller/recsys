@@ -6,8 +6,14 @@ Created on 18/09/2021
 @author: Maurizio Ferrari Dacrema
 """
 
-def generate_autoencoder_architecture_decoder_threshold(encoding_size, output_size, next_layer_size_multiplier,
-                                      max_decoder_parameters, max_n_hidden_layers):
+
+def generate_autoencoder_architecture_decoder_threshold(
+    encoding_size,
+    output_size,
+    next_layer_size_multiplier,
+    max_decoder_parameters,
+    max_n_hidden_layers,
+):
     """
     Generates architecture in the form: [encoding_size, encoding_size*next_layer_size_multiplier, ... , output_size] with sizes strictly increasing
 
@@ -30,23 +36,28 @@ def generate_autoencoder_architecture_decoder_threshold(encoding_size, output_si
     :return:
     """
 
-    assert encoding_size < output_size, "The encoding_size must be strictly lower than the output_size"
+    assert (
+        encoding_size < output_size
+    ), "The encoding_size must be strictly lower than the output_size"
 
     layers = [encoding_size]
     n_total_parameters = 0
-    n_last_layer_parameters = (layers[-1] + 1)*output_size
+    n_last_layer_parameters = (layers[-1] + 1) * output_size
 
     terminate = False
 
     while not terminate:
+        next_layer_size = int(layers[-1] * next_layer_size_multiplier)
 
-        next_layer_size = int(layers[-1]*next_layer_size_multiplier)
-
-        assert next_layer_size != layers[-1], "Two consecutive layers have the same number of neurons. " \
-                                              "Infinite loop in constructing the architecture. Layers are: {}".format(layers)
+        assert next_layer_size != layers[-1], (
+            "Two consecutive layers have the same number of neurons. "
+            "Infinite loop in constructing the architecture. Layers are: {}".format(
+                layers
+            )
+        )
 
         # Calculate parameters for the input of the new layer and update those needed for the last
-        n_total_parameters += (layers[-1] + 1)*next_layer_size
+        n_total_parameters += (layers[-1] + 1) * next_layer_size
         n_last_layer_parameters = (next_layer_size + 1) * output_size
 
         # Consistency check w.r.t. the desired limits:
@@ -66,16 +77,19 @@ def generate_autoencoder_architecture_decoder_threshold(encoding_size, output_si
         else:
             layers.append(next_layer_size)
 
-
     # Add the output layer
     layers.append(output_size)
 
     return layers
 
 
-
-def generate_autoencoder_architecture(encoding_size, output_size, next_layer_size_multiplier,
-                                      max_parameters, max_n_hidden_layers):
+def generate_autoencoder_architecture(
+    encoding_size,
+    output_size,
+    next_layer_size_multiplier,
+    max_parameters,
+    max_n_hidden_layers,
+):
     """
     Generates architecture in the form: [encoding_size, encoding_size*next_layer_size_multiplier, ... , output_size] with sizes strictly increasing
 
@@ -98,17 +112,22 @@ def generate_autoencoder_architecture(encoding_size, output_size, next_layer_siz
     :return:
     """
 
-    assert encoding_size < output_size, "The encoding_size must be strictly lower than the output_size"
+    assert (
+        encoding_size < output_size
+    ), "The encoding_size must be strictly lower than the output_size"
 
     layers = [encoding_size]
     terminate = False
 
     while not terminate:
+        next_layer_size = int(layers[-1] * next_layer_size_multiplier)
 
-        next_layer_size = int(layers[-1]*next_layer_size_multiplier)
-
-        assert next_layer_size != layers[-1], "Two consecutive layers have the same number of neurons. " \
-                                              "Infinite loop in constructing the architecture. Layers are: {}".format(layers)
+        assert next_layer_size != layers[-1], (
+            "Two consecutive layers have the same number of neurons. "
+            "Infinite loop in constructing the architecture. Layers are: {}".format(
+                layers
+            )
+        )
 
         # Consistency check w.r.t. the desired limits:
         # - Does the model exceed the maximum number of layers
@@ -120,13 +139,15 @@ def generate_autoencoder_architecture(encoding_size, output_size, next_layer_siz
             terminate = True
 
         # - Does the new model architecture exceed the maximum number of parameters
-        elif get_number_autoencoder_parameters(layers + [next_layer_size, output_size]) > max_parameters:
+        elif (
+            get_number_autoencoder_parameters(layers + [next_layer_size, output_size])
+            > max_parameters
+        ):
             # print("Terminating architecture as total of parameters adding an additional layer {:.2E} would exceed the allowed maximum {:.2E}".format(n_total_parameters + n_last_layer_parameters, max_decoder_parameters))
             terminate = True
 
         else:
             layers.append(next_layer_size)
-
 
     # Add the output layer
     layers.append(output_size)
@@ -134,9 +155,9 @@ def generate_autoencoder_architecture(encoding_size, output_size, next_layer_siz
     return layers
 
 
-
-
-def generate_tower_architecture(input_size, output_size, encoding_size, max_parameters, max_n_hidden_layers):
+def generate_tower_architecture(
+    input_size, output_size, encoding_size, max_parameters, max_n_hidden_layers
+):
     """
     Generates architecture in the form: [encoding_size, encoding_size*next_layer_size_multiplier, ... , output_size] with sizes strictly increasing
 
@@ -159,25 +180,30 @@ def generate_tower_architecture(input_size, output_size, encoding_size, max_para
     :return:
     """
 
-    assert encoding_size < output_size, "The encoding_size must be strictly lower than the output_size"
+    assert (
+        encoding_size < output_size
+    ), "The encoding_size must be strictly lower than the output_size"
 
     layers = [input_size]
     terminate = False
 
     while not terminate:
-
         # Consistency check w.r.t. the desired limits:
         # - Does the model exceed the maximum number of layers
         if len(layers) >= max_n_hidden_layers:
             terminate = True
 
         # - Does the new model architecture exceed the maximum number of parameters
-        elif get_number_parameters_full_architecture(layers + [encoding_size, output_size]) > max_parameters:
-           terminate = True
+        elif (
+            get_number_parameters_full_architecture(
+                layers + [encoding_size, output_size]
+            )
+            > max_parameters
+        ):
+            terminate = True
 
         else:
             layers.append(encoding_size)
-
 
     # Add the output layer
     layers.append(output_size)
@@ -185,9 +211,13 @@ def generate_tower_architecture(input_size, output_size, encoding_size, max_para
     return layers
 
 
-
-
-def generate_autoencoder_architecture_previous(encoding_size, last_layer_size, next_layer_size_multiplier, max_layer_size, max_n_hidden_layers):
+def generate_autoencoder_architecture_previous(
+    encoding_size,
+    last_layer_size,
+    next_layer_size_multiplier,
+    max_layer_size,
+    max_n_hidden_layers,
+):
     """
     Generates architecture in the form: [encoding_size, encoding_size*next_layer_size_multiplier, ... , last_layer_size] with sizes strictly increasing
 
@@ -208,14 +238,24 @@ def generate_autoencoder_architecture_previous(encoding_size, last_layer_size, n
     :return:
     """
 
-    assert encoding_size < last_layer_size, "The encoding_size must be strictly lower than the last_layer_size"
+    assert (
+        encoding_size < last_layer_size
+    ), "The encoding_size must be strictly lower than the last_layer_size"
 
     layers = [encoding_size]
 
-    while last_layer_size/layers[-1] > next_layer_size_multiplier*0.9 and layers[-1] < max_layer_size and len(layers) <= max_n_hidden_layers:
-        next_layer_size = int(layers[-1]*next_layer_size_multiplier)
-        assert next_layer_size != layers[-1], "Two consecutive layers have the same number of neurons. " \
-                                              "Infinite loop in constructing the architecture. Layers are: {}".format(layers)
+    while (
+        last_layer_size / layers[-1] > next_layer_size_multiplier * 0.9
+        and layers[-1] < max_layer_size
+        and len(layers) <= max_n_hidden_layers
+    ):
+        next_layer_size = int(layers[-1] * next_layer_size_multiplier)
+        assert next_layer_size != layers[-1], (
+            "Two consecutive layers have the same number of neurons. "
+            "Infinite loop in constructing the architecture. Layers are: {}".format(
+                layers
+            )
+        )
 
         layers.append(next_layer_size)
 
@@ -226,7 +266,6 @@ def generate_autoencoder_architecture_previous(encoding_size, last_layer_size, n
         layers.append(last_layer_size)
 
     return layers
-
 
 
 def get_number_autoencoder_parameters(decoder_architecture):
@@ -266,4 +305,3 @@ def get_number_parameters_full_architecture(full_architecture):
         n_parameters += (input_size + 1) * output_size
 
     return n_parameters
-

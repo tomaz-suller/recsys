@@ -6,118 +6,143 @@ Created on 07/09/17
 @author: Maurizio Ferrari Dacrema
 """
 
-
-from Recommenders.BaseMatrixFactorizationRecommender import BaseMatrixFactorizationRecommender
-from Recommenders.Incremental_Training_Early_Stopping import Incremental_Training_Early_Stopping
+from Recommenders.BaseMatrixFactorizationRecommender import (
+    BaseMatrixFactorizationRecommender,
+)
+from Recommenders.Incremental_Training_Early_Stopping import (
+    Incremental_Training_Early_Stopping,
+)
 from Recommenders.Recommender_utils import check_matrix
 
 import sys
 import numpy as np
 
 
-class _MatrixFactorization_Cython(BaseMatrixFactorizationRecommender, Incremental_Training_Early_Stopping):
-
+class _MatrixFactorization_Cython(
+    BaseMatrixFactorizationRecommender, Incremental_Training_Early_Stopping
+):
     RECOMMENDER_NAME = "MatrixFactorization_Cython_Recommender"
 
-
-    def __init__(self, URM_train, URM_impressions = None,
-                 verbose = True, algorithm_name = "MF_BPR"):
-        super(_MatrixFactorization_Cython, self).__init__(URM_train, verbose = verbose)
+    def __init__(
+        self, URM_train, URM_impressions=None, verbose=True, algorithm_name="MF_BPR"
+    ):
+        super(_MatrixFactorization_Cython, self).__init__(URM_train, verbose=verbose)
 
         self.n_users, self.n_items = self.URM_train.shape
 
         self.URM_impressions = None
         if URM_impressions is not None:
-            assert URM_impressions.shape == URM_train.shape, "{}: URM_impressions and URM_train must have the same shape, URM_train is '{}' but URM_impressions is '{}'".format(self.RECOMMENDER_NAME, URM_train.shape, URM_impressions.shape)
+            assert (
+                URM_impressions.shape == URM_train.shape
+            ), "{}: URM_impressions and URM_train must have the same shape, URM_train is '{}' but URM_impressions is '{}'".format(
+                self.RECOMMENDER_NAME, URM_train.shape, URM_impressions.shape
+            )
             self.URM_impressions = URM_impressions.copy()
-
 
         self.normalize = False
         self.algorithm_name = algorithm_name
 
-
-    def fit(self, epochs=300, batch_size = 1000,
-            num_factors=10, positive_threshold_BPR = None,
-            learning_rate = 0.001, use_bias = True,
-            sgd_mode='sgd',
-            impression_sampling_mode = "inside",
-            impression_sampling_inside_ratio = 0.5,
-            negative_interactions_quota = 0.0,
-            dropout_quota = None,
-            init_mean = 0.0, init_std_dev = 0.1,
-            user_reg = 0.0, item_reg = 0.0, bias_reg = 0.0, positive_reg = 0.0, negative_reg = 0.0,
-            random_seed = None,
-            **earlystopping_kwargs):
-
-
+    def fit(
+        self,
+        epochs=300,
+        batch_size=1000,
+        num_factors=10,
+        positive_threshold_BPR=None,
+        learning_rate=0.001,
+        use_bias=True,
+        sgd_mode="sgd",
+        impression_sampling_mode="inside",
+        impression_sampling_inside_ratio=0.5,
+        negative_interactions_quota=0.0,
+        dropout_quota=None,
+        init_mean=0.0,
+        init_std_dev=0.1,
+        user_reg=0.0,
+        item_reg=0.0,
+        bias_reg=0.0,
+        positive_reg=0.0,
+        negative_reg=0.0,
+        random_seed=None,
+        **earlystopping_kwargs,
+    ):
         self.num_factors = num_factors
         self.use_bias = use_bias
         self.sgd_mode = sgd_mode
         self.positive_threshold_BPR = positive_threshold_BPR
         self.learning_rate = learning_rate
 
-        assert negative_interactions_quota >= 0.0 and negative_interactions_quota < 1.0, "{}: negative_interactions_quota must be a float value >=0 and < 1.0, provided was '{}'".format(self.RECOMMENDER_NAME, negative_interactions_quota)
+        assert (
+            negative_interactions_quota >= 0.0 and negative_interactions_quota < 1.0
+        ), "{}: negative_interactions_quota must be a float value >=0 and < 1.0, provided was '{}'".format(
+            self.RECOMMENDER_NAME, negative_interactions_quota
+        )
         self.negative_interactions_quota = negative_interactions_quota
 
         # Import compiled module
-        from Recommenders.MatrixFactorization.Cython.MatrixFactorizationImpressions_Cython_Epoch import MatrixFactorization_Cython_Epoch
-
+        from Recommenders.MatrixFactorization.Cython.MatrixFactorizationImpressions_Cython_Epoch import (
+            MatrixFactorization_Cython_Epoch,
+        )
 
         if self.algorithm_name in ["FUNK_SVD", "ASY_SVD"]:
-
-            self.cythonEpoch = MatrixFactorization_Cython_Epoch(self.URM_train,
-                                                                algorithm_name = self.algorithm_name,
-                                                                n_factors = self.num_factors,
-                                                                learning_rate = learning_rate,
-                                                                sgd_mode = sgd_mode,
-                                                                user_reg = user_reg,
-                                                                item_reg = item_reg,
-                                                                bias_reg = bias_reg,
-                                                                batch_size = batch_size,
-                                                                use_bias = use_bias,
-                                                                init_mean = init_mean,
-                                                                negative_interactions_quota = negative_interactions_quota,
-                                                                dropout_quota = dropout_quota,
-                                                                init_std_dev = init_std_dev,
-                                                                verbose = self.verbose,
-                                                                random_seed = random_seed)
+            self.cythonEpoch = MatrixFactorization_Cython_Epoch(
+                self.URM_train,
+                algorithm_name=self.algorithm_name,
+                n_factors=self.num_factors,
+                learning_rate=learning_rate,
+                sgd_mode=sgd_mode,
+                user_reg=user_reg,
+                item_reg=item_reg,
+                bias_reg=bias_reg,
+                batch_size=batch_size,
+                use_bias=use_bias,
+                init_mean=init_mean,
+                negative_interactions_quota=negative_interactions_quota,
+                dropout_quota=dropout_quota,
+                init_std_dev=init_std_dev,
+                verbose=self.verbose,
+                random_seed=random_seed,
+            )
 
         elif self.algorithm_name == "MF_BPR":
-
             # Select only positive interactions
             URM_train_positive = self.URM_train.copy()
 
             if self.positive_threshold_BPR is not None:
-                URM_train_positive.data = URM_train_positive.data >= self.positive_threshold_BPR
+                URM_train_positive.data = (
+                    URM_train_positive.data >= self.positive_threshold_BPR
+                )
                 URM_train_positive.eliminate_zeros()
 
-                assert URM_train_positive.nnz > 0, "MatrixFactorization_Cython: URM_train_positive is empty, positive threshold is too high"
+                assert (
+                    URM_train_positive.nnz > 0
+                ), "MatrixFactorization_Cython: URM_train_positive is empty, positive threshold is too high"
 
-            self.cythonEpoch = MatrixFactorization_Cython_Epoch(URM_train_positive,
-                                                                URM_impressions = self.URM_impressions,
-                                                                algorithm_name = self.algorithm_name,
-                                                                n_factors = self.num_factors,
-                                                                learning_rate=learning_rate,
-                                                                sgd_mode = sgd_mode,
-                                                                impression_sampling_mode = impression_sampling_mode,
-                                                                impression_sampling_inside_ratio = impression_sampling_inside_ratio,
-                                                                user_reg = user_reg,
-                                                                positive_reg = positive_reg,
-                                                                negative_reg = negative_reg,
-                                                                batch_size = batch_size,
-                                                                use_bias = use_bias,
-                                                                init_mean = init_mean,
-                                                                init_std_dev = init_std_dev,
-                                                                dropout_quota = dropout_quota,
-                                                                verbose = self.verbose,
-                                                                random_seed = random_seed)
+            self.cythonEpoch = MatrixFactorization_Cython_Epoch(
+                URM_train_positive,
+                URM_impressions=self.URM_impressions,
+                algorithm_name=self.algorithm_name,
+                n_factors=self.num_factors,
+                learning_rate=learning_rate,
+                sgd_mode=sgd_mode,
+                impression_sampling_mode=impression_sampling_mode,
+                impression_sampling_inside_ratio=impression_sampling_inside_ratio,
+                user_reg=user_reg,
+                positive_reg=positive_reg,
+                negative_reg=negative_reg,
+                batch_size=batch_size,
+                use_bias=use_bias,
+                init_mean=init_mean,
+                init_std_dev=init_std_dev,
+                dropout_quota=dropout_quota,
+                verbose=self.verbose,
+                random_seed=random_seed,
+            )
         self._prepare_model_for_validation()
         self._update_best_model()
 
-        self._train_with_early_stopping(epochs,
-                                        algorithm_name = self.algorithm_name,
-                                        **earlystopping_kwargs)
-
+        self._train_with_early_stopping(
+            epochs, algorithm_name=self.algorithm_name, **earlystopping_kwargs
+        )
 
         self.USER_factors = self.USER_factors_best
         self.ITEM_factors = self.ITEM_factors_best
@@ -128,8 +153,6 @@ class _MatrixFactorization_Cython(BaseMatrixFactorizationRecommender, Incrementa
             self.GLOBAL_bias = self.GLOBAL_bias_best
 
         sys.stdout.flush()
-
-
 
     def _prepare_model_for_validation(self):
         self.USER_factors = self.cythonEpoch.get_USER_factors()
@@ -149,11 +172,8 @@ class _MatrixFactorization_Cython(BaseMatrixFactorizationRecommender, Incrementa
             self.ITEM_bias_best = self.ITEM_bias.copy()
             self.GLOBAL_bias_best = self.GLOBAL_bias
 
-
     def _run_epoch(self, num_epoch):
-       self.cythonEpoch.epochIteration_Cython()
-
-
+        self.cythonEpoch.epochIteration_Cython()
 
 
 class MatrixFactorization_BPR_Cython(_MatrixFactorization_Cython):
@@ -164,17 +184,15 @@ class MatrixFactorization_BPR_Cython(_MatrixFactorization_Cython):
     RECOMMENDER_NAME = "MatrixFactorization_BPR_Cython_Recommender"
 
     def __init__(self, *pos_args, **key_args):
-        super(MatrixFactorization_BPR_Cython, self).__init__(*pos_args, algorithm_name="MF_BPR", **key_args)
+        super(MatrixFactorization_BPR_Cython, self).__init__(
+            *pos_args, algorithm_name="MF_BPR", **key_args
+        )
 
     def fit(self, **key_args):
-
         key_args["use_bias"] = False
         key_args["negative_interactions_quota"] = 0.0
 
         super(MatrixFactorization_BPR_Cython, self).fit(**key_args)
-
-
-
 
 
 class MatrixFactorization_FunkSVD_Cython(_MatrixFactorization_Cython):
@@ -194,14 +212,12 @@ class MatrixFactorization_FunkSVD_Cython(_MatrixFactorization_Cython):
     RECOMMENDER_NAME = "MatrixFactorization_FunkSVD_Cython_Recommender"
 
     def __init__(self, *pos_args, **key_args):
-        super(MatrixFactorization_FunkSVD_Cython, self).__init__(*pos_args, algorithm_name="FUNK_SVD", **key_args)
-
+        super(MatrixFactorization_FunkSVD_Cython, self).__init__(
+            *pos_args, algorithm_name="FUNK_SVD", **key_args
+        )
 
     def fit(self, **key_args):
-
         super(MatrixFactorization_FunkSVD_Cython, self).fit(**key_args)
-
-
 
 
 class MatrixFactorization_AsySVD_Cython(_MatrixFactorization_Cython):
@@ -222,19 +238,21 @@ class MatrixFactorization_AsySVD_Cython(_MatrixFactorization_Cython):
     RECOMMENDER_NAME = "MatrixFactorization_AsySVD_Cython_Recommender"
 
     def __init__(self, *pos_args, **key_args):
-        super(MatrixFactorization_AsySVD_Cython, self).__init__(*pos_args, algorithm_name="ASY_SVD", **key_args)
-
+        super(MatrixFactorization_AsySVD_Cython, self).__init__(
+            *pos_args, algorithm_name="ASY_SVD", **key_args
+        )
 
     def fit(self, **key_args):
-
         if "batch_size" in key_args and key_args["batch_size"] > 1:
-            print("{}: batch_size not supported for this recommender, setting to default value 1.".format(self.RECOMMENDER_NAME))
+            print(
+                "{}: batch_size not supported for this recommender, setting to default value 1.".format(
+                    self.RECOMMENDER_NAME
+                )
+            )
 
         key_args["batch_size"] = 1
 
         super(MatrixFactorization_AsySVD_Cython, self).fit(**key_args)
-
-
 
     def _prepare_model_for_validation(self):
         """
@@ -254,7 +272,6 @@ class MatrixFactorization_AsySVD_Cython(_MatrixFactorization_Cython):
             self.ITEM_bias = self.cythonEpoch.get_ITEM_bias()
             self.GLOBAL_bias = self.cythonEpoch.get_GLOBAL_bias()
 
-
     def _update_best_model(self):
         self.USER_factors_best = self.USER_factors.copy()
         self.ITEM_factors_best = self.ITEM_factors.copy()
@@ -265,9 +282,7 @@ class MatrixFactorization_AsySVD_Cython(_MatrixFactorization_Cython):
             self.ITEM_bias_best = self.ITEM_bias.copy()
             self.GLOBAL_bias_best = self.GLOBAL_bias
 
-
     def _estimate_user_factors(self, ITEM_factors_Y):
-
         profile_length = np.ediff1d(self.URM_train.indptr)
         profile_length_sqrt = np.sqrt(profile_length)
 
@@ -277,11 +292,9 @@ class MatrixFactorization_AsySVD_Cython(_MatrixFactorization_Cython):
 
         USER_factors = self.URM_train.dot(ITEM_factors_Y)
 
-        #Divide every row for the sqrt of the profile length
+        # Divide every row for the sqrt of the profile length
         for user_index in range(self.n_users):
-
             if profile_length_sqrt[user_index] > 0:
-
                 USER_factors[user_index, :] /= profile_length_sqrt[user_index]
 
         if self.verbose:
@@ -289,9 +302,9 @@ class MatrixFactorization_AsySVD_Cython(_MatrixFactorization_Cython):
 
         return USER_factors
 
-
-
-    def set_URM_train(self, URM_train_new, estimate_item_similarity_for_cold_users = False, **kwargs):
+    def set_URM_train(
+        self, URM_train_new, estimate_item_similarity_for_cold_users=False, **kwargs
+    ):
         """
 
         :param URM_train_new:
@@ -300,12 +313,20 @@ class MatrixFactorization_AsySVD_Cython(_MatrixFactorization_Cython):
         :return:
         """
 
-        assert self.URM_train.shape == URM_train_new.shape, "{}: set_URM_train old and new URM train have different shapes".format(self.RECOMMENDER_NAME)
+        assert (
+            self.URM_train.shape == URM_train_new.shape
+        ), "{}: set_URM_train old and new URM train have different shapes".format(
+            self.RECOMMENDER_NAME
+        )
 
-        if len(kwargs)>0:
-            self._print("set_URM_train keyword arguments not supported for this recommender class. Received: {}".format(kwargs))
+        if len(kwargs) > 0:
+            self._print(
+                "set_URM_train keyword arguments not supported for this recommender class. Received: {}".format(
+                    kwargs
+                )
+            )
 
-        self.URM_train = check_matrix(URM_train_new.copy(), 'csr', dtype=np.float32)
+        self.URM_train = check_matrix(URM_train_new.copy(), "csr", dtype=np.float32)
         self.URM_train.eliminate_zeros()
 
         # No need to ever use a knn model
@@ -313,10 +334,8 @@ class MatrixFactorization_AsySVD_Cython(_MatrixFactorization_Cython):
         self._cold_user_mask = np.ediff1d(self.URM_train.indptr) == 0
 
         if estimate_item_similarity_for_cold_users:
-
             self._print("Estimating USER_factors for cold users...")
 
             self.USER_factors = self._estimate_user_factors(self.ITEM_factors_Y_best)
 
             self._print("Estimating USER_factors for cold users... done!")
-

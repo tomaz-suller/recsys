@@ -9,36 +9,50 @@ Created on 26/11/19
 import pandas as pd
 
 
-def _loadICM_genres_years(genres_path, header=True, separator=',', genresSeparator="|"):
-
-    ICM_genres_dataframe = pd.read_csv(filepath_or_buffer=genres_path, sep=separator, header=header, dtype={0:str, 1:str, 2:str}, engine='python', encoding='latin-1')
+def _loadICM_genres_years(genres_path, header=True, separator=",", genresSeparator="|"):
+    ICM_genres_dataframe = pd.read_csv(
+        filepath_or_buffer=genres_path,
+        sep=separator,
+        header=header,
+        dtype={0: str, 1: str, 2: str},
+        engine="python",
+        encoding="latin-1",
+    )
     ICM_genres_dataframe.columns = ["ItemID", "Title", "GenreList"]
 
     ICM_years_dataframe = ICM_genres_dataframe.copy()
-    ICM_years_dataframe["Year"] = ICM_years_dataframe["Title"].str.extract(pat='\(([0-9]{4})\)$')
+    ICM_years_dataframe["Year"] = ICM_years_dataframe["Title"].str.extract(
+        pat="\(([0-9]{4})\)$"
+    )
     ICM_years_dataframe = ICM_years_dataframe[ICM_years_dataframe["Year"].notnull()]
     ICM_years_dataframe["Year"] = ICM_years_dataframe["Year"].astype(int)
-    ICM_years_dataframe = ICM_years_dataframe[['ItemID', 'Year']]
-    ICM_years_dataframe.rename(columns={'Year': 'Data'}, inplace=True)
+    ICM_years_dataframe = ICM_years_dataframe[["ItemID", "Year"]]
+    ICM_years_dataframe.rename(columns={"Year": "Data"}, inplace=True)
     ICM_years_dataframe["FeatureID"] = "Year"
 
-
     # Split GenreList in order to obtain a dataframe with a tag per row
-    ICM_genres_dataframe = pd.DataFrame(ICM_genres_dataframe["GenreList"].str.split(genresSeparator).tolist(),
-                                        index=ICM_genres_dataframe["ItemID"]).stack()
+    ICM_genres_dataframe = pd.DataFrame(
+        ICM_genres_dataframe["GenreList"].str.split(genresSeparator).tolist(),
+        index=ICM_genres_dataframe["ItemID"],
+    ).stack()
 
-    ICM_genres_dataframe = ICM_genres_dataframe.reset_index()[[0, 'ItemID']]
-    ICM_genres_dataframe.columns = ['FeatureID', 'ItemID']
-    ICM_genres_dataframe = ICM_genres_dataframe[['ItemID', 'FeatureID']]
+    ICM_genres_dataframe = ICM_genres_dataframe.reset_index()[[0, "ItemID"]]
+    ICM_genres_dataframe.columns = ["FeatureID", "ItemID"]
+    ICM_genres_dataframe = ICM_genres_dataframe[["ItemID", "FeatureID"]]
     ICM_genres_dataframe["Data"] = 1
 
     return ICM_genres_dataframe, ICM_years_dataframe
 
 
-
-def _loadURM(URM_path, header=None, separator=','):
-
-    URM_all_dataframe = pd.read_csv(filepath_or_buffer=URM_path, sep=separator, header=header, dtype={0:str, 1:str, 2:float, 3:int}, engine='python', encoding='latin-1')
+def _loadURM(URM_path, header=None, separator=","):
+    URM_all_dataframe = pd.read_csv(
+        filepath_or_buffer=URM_path,
+        sep=separator,
+        header=header,
+        dtype={0: str, 1: str, 2: float, 3: int},
+        engine="python",
+        encoding="latin-1",
+    )
     URM_all_dataframe.columns = ["UserID", "ItemID", "Interaction", "Timestamp"]
 
     URM_timestamp_dataframe = URM_all_dataframe.copy().drop(columns=["Interaction"])
@@ -49,11 +63,7 @@ def _loadURM(URM_path, header=None, separator=','):
     return URM_all_dataframe, URM_timestamp_dataframe
 
 
-
-
-
-def _loadICM_tags(tags_path, header=True, separator=','):
-
+def _loadICM_tags(tags_path, header=True, separator=","):
     # Tags
     from Data_manager.TagPreprocessing import tagFilterAndStemming
 
@@ -66,8 +76,7 @@ def _loadICM_tags(tags_path, header=True, separator=','):
     tags_lists = []
 
     for index, line in enumerate(fileHandle):
-
-        if index % 100000 == 0 and index>0:
+        if index % 100000 == 0 and index > 0:
             print("Processed {} rows".format(index))
 
         if (len(line)) > 1:
@@ -89,24 +98,22 @@ def _loadICM_tags(tags_path, header=True, separator=','):
 
     ICM_dataframe = pd.DataFrame(tags_lists, index=movie_id_list).stack()
     ICM_dataframe = ICM_dataframe.reset_index()[["level_0", 0]]
-    ICM_dataframe.columns = ['ItemID', 'FeatureID']
+    ICM_dataframe.columns = ["ItemID", "FeatureID"]
     ICM_dataframe["Data"] = 1
-
 
     return ICM_dataframe
 
 
-
-
-
-def _loadUCM(UCM_path, header=True, separator=','):
-
+def _loadUCM(UCM_path, header=True, separator=","):
     # Genres
     from Data_manager.IncrementalSparseMatrix import IncrementalSparseMatrix_FilterIDs
 
-    ICM_builder = IncrementalSparseMatrix_FilterIDs(preinitialized_col_mapper = None, on_new_col = "add",
-                                                    preinitialized_row_mapper = None, on_new_row = "add")
-
+    ICM_builder = IncrementalSparseMatrix_FilterIDs(
+        preinitialized_col_mapper=None,
+        on_new_col="add",
+        preinitialized_row_mapper=None,
+        on_new_row="add",
+    )
 
     fileHandle = open(UCM_path, "r", encoding="latin1")
     numCells = 0
@@ -116,7 +123,7 @@ def _loadUCM(UCM_path, header=True, separator=','):
 
     for line in fileHandle:
         numCells += 1
-        if (numCells % 1000000 == 0):
+        if numCells % 1000000 == 0:
             print("Processed {} rows".format(numCells))
 
         if (len(line)) > 1:
@@ -134,15 +141,12 @@ def _loadUCM(UCM_path, header=True, separator=','):
 
             # Rows movie ID
             # Cols features
-            ICM_builder.add_single_row(user_id, token_list, data = 1.0)
-
+            ICM_builder.add_single_row(user_id, token_list, data=1.0)
 
     fileHandle.close()
 
-    return ICM_builder.get_SparseMatrix(), ICM_builder.get_column_token_to_id_mapper(), ICM_builder.get_row_token_to_id_mapper()
-
-
-
-
-
-
+    return (
+        ICM_builder.get_SparseMatrix(),
+        ICM_builder.get_column_token_to_id_mapper(),
+        ICM_builder.get_row_token_to_id_mapper(),
+    )

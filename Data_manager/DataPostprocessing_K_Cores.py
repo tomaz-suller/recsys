@@ -20,17 +20,16 @@ class DataPostprocessing_K_Cores(DataPostprocessing):
     https://www.geeksforgeeks.org/find-k-cores-graph/
     """
 
-
     def __init__(self, dataReader_object, k_cores_value):
-
-        assert k_cores_value >= 1,\
-            "DataReaderPostprocessing_K_Cores: k_cores_value must be a positive value >= 1, provided value was {}".format(k_cores_value)
+        assert (
+            k_cores_value >= 1
+        ), "DataReaderPostprocessing_K_Cores: k_cores_value must be a positive value >= 1, provided value was {}".format(
+            k_cores_value
+        )
 
         super(DataPostprocessing_K_Cores, self).__init__(dataReader_object)
 
         self.k_cores_value = k_cores_value
-
-
 
     def _get_dataset_name_data_subfolder(self):
         """
@@ -51,8 +50,6 @@ class DataPostprocessing_K_Cores(DataPostprocessing):
 
         return subfolder_name
 
-
-
     def _load_from_original_file(self):
         """
         _load_from_original_file will call the load of the dataset and then apply on it the k-cores
@@ -62,15 +59,19 @@ class DataPostprocessing_K_Cores(DataPostprocessing):
         loaded_dataset = self.dataReader_object.load_data()
         URM_all = loaded_dataset.AVAILABLE_URM["URM_all"]
 
-         # Apply required K - core on zero-core data from ORIGINAL split
-        _, users_to_remove, items_to_remove = select_k_cores(URM_all, k_value = self.k_cores_value)
+        # Apply required K - core on zero-core data from ORIGINAL split
+        _, users_to_remove, items_to_remove = select_k_cores(
+            URM_all, k_value=self.k_cores_value
+        )
 
-        loaded_dataset._remove_items_and_users(items_to_remove = items_to_remove, users_to_remove = users_to_remove)
+        loaded_dataset._remove_items_and_users(
+            items_to_remove=items_to_remove, users_to_remove=users_to_remove
+        )
 
         return loaded_dataset
 
 
-def select_k_cores(URM, k_value = 5, reshape = False):
+def select_k_cores(URM, k_value=5, reshape=False):
     """
 
     :param URM:
@@ -79,7 +80,9 @@ def select_k_cores(URM, k_value = 5, reshape = False):
     :return: URM, removedUsers, removedItems
     """
 
-    print("DataDenseSplit_K_Cores: k-cores extraction will zero out some users and items without changing URM shape")
+    print(
+        "DataDenseSplit_K_Cores: k-cores extraction will zero out some users and items without changing URM shape"
+    )
 
     URM.eliminate_zeros()
     n_users, n_items = URM.shape
@@ -87,16 +90,19 @@ def select_k_cores(URM, k_value = 5, reshape = False):
     removed_users = set()
     removed_items = set()
 
-    print("DataDenseSplit_K_Cores: Initial URM desity is {:.2E}".format(URM.nnz/(n_users*n_items)))
+    print(
+        "DataDenseSplit_K_Cores: Initial URM desity is {:.2E}".format(
+            URM.nnz / (n_users * n_items)
+        )
+    )
 
     convergence = False
     num_iterations = 0
 
     while not convergence:
-
         convergence_user = False
 
-        URM = check_matrix(URM, 'csr')
+        URM = check_matrix(URM, "csr")
 
         user_degree = np.ediff1d(URM.indptr)
 
@@ -107,20 +113,16 @@ def select_k_cores(URM, k_value = 5, reshape = False):
             convergence_user = True
 
         else:
-
             for user in range(n_users):
-
                 if to_be_removed[user] and user not in removed_users:
-                    URM.data[URM.indptr[user]:URM.indptr[user+1]] = 0
+                    URM.data[URM.indptr[user] : URM.indptr[user + 1]] = 0
                     removed_users.add(user)
 
             URM.eliminate_zeros()
 
-
-
         convergence_item = False
 
-        URM = check_matrix(URM, 'csc')
+        URM = check_matrix(URM, "csc")
 
         items_degree = np.ediff1d(URM.indptr)
 
@@ -131,37 +133,40 @@ def select_k_cores(URM, k_value = 5, reshape = False):
             convergence_item = True
 
         else:
-
             for item in range(n_items):
-
                 if to_be_removed[item] and item not in removed_items:
-                    URM.data[URM.indptr[item]:URM.indptr[item+1]] = 0
+                    URM.data[URM.indptr[item] : URM.indptr[item + 1]] = 0
                     removed_items.add(item)
 
             URM.eliminate_zeros()
 
-
-
-
         num_iterations += 1
         convergence = convergence_item and convergence_user
 
-
         if URM.nnz == 0:
             convergence = True
-            print("DataDenseSplit_K_Cores: WARNING on iteration {}. URM is empty.".format(num_iterations))
+            print(
+                "DataDenseSplit_K_Cores: WARNING on iteration {}. URM is empty.".format(
+                    num_iterations
+                )
+            )
 
         else:
             n_selected_users = n_users - len(removed_users)
             n_selected_items = n_items - len(removed_items)
 
-            print("DataDenseSplit_K_Cores: K_Cores {}. Iteration {}. URM density without zeroed-out nodes is {:.2E}.\n"
-                  "Selected users are {} ({:4.1f}%), Selected items are {} ({:4.1f}%)".format(
-                k_value, num_iterations,
-                URM.nnz/((n_selected_users)*(n_selected_items)),
-                n_selected_users, n_selected_users/n_users*100,
-                n_selected_items, n_selected_items/n_items*100))
-
+            print(
+                "DataDenseSplit_K_Cores: K_Cores {}. Iteration {}. URM density without zeroed-out nodes is {:.2E}.\n"
+                "Selected users are {} ({:4.1f}%), Selected items are {} ({:4.1f}%)".format(
+                    k_value,
+                    num_iterations,
+                    URM.nnz / ((n_selected_users) * (n_selected_items)),
+                    n_selected_users,
+                    n_selected_users / n_users * 100,
+                    n_selected_items,
+                    n_selected_items / n_items * 100,
+                )
+            )
 
     print("DataDenseSplit_K_Cores: split complete")
 
@@ -170,6 +175,5 @@ def select_k_cores(URM, k_value = 5, reshape = False):
     if reshape:
         # Remove all columns and rows with no interactions
         return remove_empty_rows_and_cols(URM)
-
 
     return URM.copy(), np.array(list(removed_users)), np.array(list(removed_items))

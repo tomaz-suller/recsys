@@ -26,7 +26,9 @@ import numpy, sys, re
 
 
 if len(sys.argv) != 4:
-    raise ValueError("Wrong number of parameters received. Expected 4, got {}".format(sys.argv))
+    raise ValueError(
+        "Wrong number of parameters received. Expected 4, got {}".format(sys.argv)
+    )
 
 # Get the name of the file to compile
 fileToCompile = sys.argv[1]
@@ -37,15 +39,15 @@ del sys.argv[1]
 extensionName = re.sub("\.pyx", "", fileToCompile)
 
 
-ext_modules = Extension(extensionName,
-                [fileToCompile],
-                extra_compile_args=['-O2'],
-                include_dirs=[numpy.get_include(),],
-                )
-
-ext_modules.cython_directives = {'language_level': '3'}
-
-setup(
-    cmdclass={'build_ext': build_ext},
-    ext_modules=[ext_modules]
+ext_modules = Extension(
+    extensionName,
+    [fileToCompile],
+    extra_compile_args=["-O2"],
+    include_dirs=[
+        numpy.get_include(),
+    ],
 )
+
+ext_modules.cython_directives = {"language_level": "3"}
+
+setup(cmdclass={"build_ext": build_ext}, ext_modules=[ext_modules])
