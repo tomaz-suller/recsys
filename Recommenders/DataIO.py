@@ -6,7 +6,12 @@ Created on 27/04/2019
 @author: Maurizio Ferrari Dacrema
 """
 
-import os, json, zipfile, shutil, platform, warnings
+import os
+import json
+import zipfile
+import shutil
+import platform
+import warnings
 
 import scipy.sparse as sps
 from pandas import DataFrame

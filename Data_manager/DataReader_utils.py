@@ -7,7 +7,9 @@ Created on 22/11/18
 """
 
 import numpy as np
-import time, sys, os
+import time
+import sys
+import os
 from Recommenders.Recommender_utils import check_matrix
 import scipy.sparse as sps
 

@@ -14,7 +14,8 @@ from Recommenders.Recommender_utils import similarityMatrixTopK
 from Recommenders.Incremental_Training_Early_Stopping import (
     Incremental_Training_Early_Stopping,
 )
-import os, sys
+import os
+import sys
 
 
 def estimate_required_MB(n_items, symmetric):

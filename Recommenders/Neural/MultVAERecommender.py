@@ -10,7 +10,8 @@ try:
 except ImportError:
     print("Tensorflow is not available")
 
-import os, shutil, zipfile
+import os
+import shutil
 
 import numpy as np
 from scipy import sparse

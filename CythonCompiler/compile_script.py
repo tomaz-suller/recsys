@@ -22,7 +22,9 @@ except ImportError:
 
 
 from Cython.Distutils import build_ext
-import numpy, sys, re
+import numpy
+import sys
+import re
 
 
 if len(sys.argv) != 4:

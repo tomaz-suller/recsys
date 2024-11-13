@@ -6,7 +6,8 @@ Created on 06/07/2018
 @author: Maurizio Ferrari Dacrema
 """
 
-import time, sys
+import time
+import sys
 import numpy as np
 import pandas as pd
 

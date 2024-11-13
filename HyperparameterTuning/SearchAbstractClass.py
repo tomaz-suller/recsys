@@ -6,7 +6,9 @@ Created on 10/03/2018
 @author: Maurizio Ferrari Dacrema
 """
 
-import time, os, traceback
+import time
+import os
+import traceback
 import pandas as pd
 from Recommenders.Incremental_Training_Early_Stopping import (
     Incremental_Training_Early_Stopping,
@@ -739,7 +741,7 @@ class SearchAbstractClass(object):
             MEMORY_ERROR_EXCEPTION_TUPLE
             if self.terminate_on_memory_error
             else (NeverMatch)
-        ) as e:
+        ):
             traceback.print_exc()
             self._print(
                 "{}: Search for '{}' interrupted due to MemoryError.".format(
@@ -754,7 +756,7 @@ class SearchAbstractClass(object):
             OTHER_ERROR_EXCEPTION_TUPLE
             if self.terminate_on_other_error
             else (NeverMatch)
-        ) as e:
+        ):
             traceback.print_exc()
             self._print(
                 "{}: Search for '{}' interrupted due to an Error.".format(

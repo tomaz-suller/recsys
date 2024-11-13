@@ -13,7 +13,8 @@ from Recommenders.BaseSimilarityMatrixRecommender import (
 from Recommenders.Recommender_utils import check_matrix
 from Recommenders.Similarity.Compute_Similarity import Compute_Similarity
 from scipy.sparse import linalg
-import time, sys
+import time
+import sys
 import numpy as np
 from Recommenders.DataIO import DataIO
 
@@ -151,7 +152,7 @@ class CFW_D_Similarity_Linalg(
             # Chech whether the content coordinate is associated to a non zero target value
             # If true, the content coordinate has a collaborative non-zero value
             # if false, the content coordinate has a collaborative zero value
-            is_common = np.in1d(content_coordinates, target_coordinates)
+            is_common = np.isin(content_coordinates, target_coordinates)
 
             num_common_in_current_row = is_common.sum()
             num_common_coordinates += num_common_in_current_row

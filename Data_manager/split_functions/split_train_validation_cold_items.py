@@ -8,7 +8,6 @@ Created on 23/04/2019
 
 import numpy as np
 import scipy.sparse as sps
-from Data_manager.IncrementalSparseMatrix import IncrementalSparseMatrix
 
 
 def _select_train_warm_items(

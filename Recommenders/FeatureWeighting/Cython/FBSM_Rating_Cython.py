@@ -16,10 +16,10 @@ from Recommenders.Incremental_Training_Early_Stopping import (
 from Recommenders.Recommender_utils import check_matrix
 from Recommenders.IR_feature_weighting import okapi_BM_25, TF_IDF
 
-from CythonCompiler.run_compile_subprocess import run_compile_subprocess
 
 import scipy.sparse as sps
-import sys, time
+import sys
+import time
 import numpy as np
 
 

@@ -8,7 +8,9 @@ Created on 26/06/18
 
 import numpy as np
 import scipy.sparse as sps
-import time, sys, copy
+import time
+import sys
+import copy
 import pandas as pd
 
 from enum import Enum
@@ -414,7 +416,7 @@ class Evaluator(object):
 
             # Being the URM CSR, the indices are the non-zero column indexes
             recommended_items = recommended_items_batch_list[batch_user_index]
-            is_relevant = np.in1d(recommended_items, relevant_items, assume_unique=True)
+            is_relevant = np.isin(recommended_items, relevant_items, assume_unique=True)
 
             self._n_users_evaluated += 1
 

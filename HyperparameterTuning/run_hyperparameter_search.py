@@ -6,7 +6,8 @@ Created on 22/11/17
 @author: Maurizio Ferrari Dacrema
 """
 
-import os, multiprocessing
+import os
+import multiprocessing
 from functools import partial
 
 ######################################################################

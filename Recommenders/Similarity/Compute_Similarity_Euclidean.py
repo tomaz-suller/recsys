@@ -7,7 +7,8 @@ Created on 23/10/17
 """
 
 import numpy as np
-import time, sys
+import time
+import sys
 import scipy.sparse as sps
 from Utils.seconds_to_biggest_unit import seconds_to_biggest_unit
 from Recommenders.Similarity.Compute_Similarity_Python import (

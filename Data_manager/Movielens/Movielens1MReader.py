@@ -7,7 +7,8 @@ Created on 14/09/17
 """
 
 import pandas as pd
-import zipfile, shutil
+import zipfile
+import shutil
 from Data_manager.DataReader import DataReader
 from Data_manager.DataReader_utils import download_from_URL
 from Data_manager.DatasetMapperManager import DatasetMapperManager

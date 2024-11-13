@@ -71,7 +71,7 @@ class MyTestCase(unittest.TestCase):
         TopK = 0
 
         data_matrix = np.array([[1, 2, 0, 1], [0, 1, 4, 1], [3, 0, 1, 0]])
-        data_matrix = sps.csr_matrix(data_matrix, dtype=np.float)
+        data_matrix = sps.csr_matrix(data_matrix, dtype=float)
 
         row_weights = [2, 3, 0, 4]
 
@@ -206,7 +206,6 @@ class MyTestCase(unittest.TestCase):
             Cosine_Similarity_Parallel as Cosine_Similarity_Parallel,
         )
 
-        import numpy.matlib
 
         TopK = 0
         shrink = 5
@@ -265,7 +264,6 @@ class MyTestCase(unittest.TestCase):
             Cosine_Similarity_Parallel as Cosine_Similarity_Parallel,
         )
 
-        import numpy.matlib
 
         TopK = 0
         shrink = 0
@@ -333,7 +331,6 @@ class MyTestCase(unittest.TestCase):
             Cosine_Similarity_Parallel as Cosine_Similarity_Parallel,
         )
 
-        import numpy.matlib
 
         TopK = 0
         shrink = 0
@@ -401,7 +398,6 @@ class MyTestCase(unittest.TestCase):
             Cosine_Similarity_Parallel as Cosine_Similarity_Parallel,
         )
 
-        import numpy.matlib
 
         TopK = 0
         shrink = 0

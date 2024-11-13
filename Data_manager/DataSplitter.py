@@ -6,7 +6,8 @@ Created on 30/11/18
 @author: Maurizio Ferrari Dacrema
 """
 
-import traceback, os
+import traceback
+import os
 from Data_manager.DataReader import DataReader
 
 

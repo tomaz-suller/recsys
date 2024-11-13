@@ -6,7 +6,9 @@ Created on 22/11/2018
 @author: Maurizio Ferrari Dacrema
 """
 
-import traceback, os, shutil
+import traceback
+import os
+import shutil
 
 from Recommenders.BaseCBFRecommender import (
     BaseItemCBFRecommender,

@@ -6,12 +6,12 @@ Created on 19/02/2019
 @author: Maurizio Ferrari Dacrema
 """
 
-import zipfile, shutil
+import zipfile
+import shutil
 import pandas as pd
 from Data_manager.DatasetMapperManager import DatasetMapperManager
-from Data_manager.Dataset import Dataset
 from Data_manager.DataReader import DataReader
-from Data_manager.DataReader_utils import download_from_URL, load_CSV_into_SparseBuilder
+from Data_manager.DataReader_utils import download_from_URL
 
 
 class MovielensHetrec2011Reader(DataReader):

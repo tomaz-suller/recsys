@@ -9,7 +9,6 @@ Created on 04/01/2023
 import torch
 import scipy.sparse as sps
 import numpy as np
-import copy
 
 
 def loss_MSE(model, batch, device):

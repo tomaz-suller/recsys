@@ -9,7 +9,8 @@ Created on 14/12/18
 from skopt import gp_minimize
 import pandas as pd
 import numpy as np
-import time, os
+import time
+import os
 from skopt.space import Real, Integer, Categorical
 from Utils.seconds_to_biggest_unit import seconds_to_biggest_unit
 
@@ -455,7 +456,7 @@ class SearchBayesianSkopt(SearchAbstractClass):
                     n_jobs=self.n_jobs,
                 )
 
-        except ValueError as e:
+        except ValueError:
             traceback.print_exc()
             self._write_log(
                 "{}: Search interrupted due to ValueError. The evaluated configurations may have had all the same value.\n".format(

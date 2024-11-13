@@ -5,7 +5,6 @@
 """
 
 import numpy as np
-import scipy.sparse as sps
 
 from sklearn.preprocessing import normalize
 from Recommenders.Recommender_utils import check_matrix, similarityMatrixTopK
@@ -17,7 +16,8 @@ from Recommenders.BaseSimilarityMatrixRecommender import (
 from Recommenders.Similarity.Compute_Similarity_Python import (
     Incremental_Similarity_Builder,
 )
-import time, sys
+import time
+import sys
 
 
 class P3alphaRecommender(BaseItemSimilarityMatrixRecommender):

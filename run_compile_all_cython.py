@@ -6,7 +6,10 @@ Created on 30/03/2019
 @author: Maurizio Ferrari Dacrema
 """
 
-import sys, glob, traceback, os
+import sys
+import glob
+import traceback
+import os
 from CythonCompiler.run_compile_subprocess import run_compile_subprocess
 
 

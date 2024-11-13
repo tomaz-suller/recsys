@@ -6,7 +6,8 @@ Created on 26/11/18
 @author: Maurizio Ferrari Dacrema
 """
 
-import os, shutil
+import os
+import shutil
 from Data_manager.DataReader import DataReader
 
 if __name__ == "__main__":

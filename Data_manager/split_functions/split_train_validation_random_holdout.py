@@ -28,7 +28,6 @@ def split_train_in_two_percentage_user_wise(
         train_percentage
     )
 
-    from Data_manager.IncrementalSparseMatrix import IncrementalSparseMatrix
 
     # ensure to use csr matrix or we get big problem
     URM_train = URM_train.tocsr()
@@ -126,7 +125,6 @@ def split_train_in_two_percentage_global_sample(URM_all, train_percentage=0.1):
         train_percentage
     )
 
-    from Data_manager.IncrementalSparseMatrix import IncrementalSparseMatrix
 
     num_users, num_items = URM_all.shape
 

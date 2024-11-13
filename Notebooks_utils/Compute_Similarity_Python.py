@@ -7,7 +7,8 @@ Created on 23/10/17
 """
 
 import numpy as np
-import time, sys
+import time
+import sys
 import scipy.sparse as sps
 
 

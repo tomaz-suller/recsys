@@ -6,7 +6,8 @@ Created on 01/01/2018
 @author: Maurizio Ferrari Dacrema
 """
 
-import os, traceback
+import os
+import traceback
 from Data_manager.Dataset import Dataset
 
 

@@ -6,7 +6,8 @@ Created on 10/2017
 @author: Alberto Gasparin, Maurizio Ferrari Dacrema
 """
 
-import sys, time
+import sys
+import time
 import numpy as np
 import scipy.sparse as sps
 from Recommenders.DataIO import DataIO

@@ -6,7 +6,8 @@ Created on 14/09/17
 @author: Maurizio Ferrari Dacrema
 """
 
-import zipfile, shutil
+import zipfile
+import shutil
 import pandas as pd
 from Data_manager.DatasetMapperManager import DatasetMapperManager
 from Data_manager.DataReader import DataReader

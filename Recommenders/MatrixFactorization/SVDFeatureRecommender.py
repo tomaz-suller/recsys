@@ -5,7 +5,9 @@ Created on 18/02/2019
 
 """
 
-import subprocess, os, shutil
+import subprocess
+import os
+import shutil
 import numpy as np
 from tqdm import tqdm
 

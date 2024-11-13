@@ -10,7 +10,8 @@ from Recommenders.BaseCBFRecommender import (
     BaseUserCBFRecommender,
 )
 from Evaluation.Evaluator import EvaluatorHoldout
-import traceback, os
+import traceback
+import os
 
 
 def _get_instance(recommender_class, URM_train, ICM_all, UCM_all):

@@ -7,7 +7,8 @@ Created on 19/06/2019
 """
 
 from Recommenders.Recommender_utils import get_unique_temp_folder
-import os, shutil
+import os
+import shutil
 
 
 class BaseTempFolder(object):

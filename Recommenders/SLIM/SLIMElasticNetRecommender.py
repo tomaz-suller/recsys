@@ -15,7 +15,8 @@ from Recommenders.Similarity.Compute_Similarity_Python import (
     Incremental_Similarity_Builder,
 )
 from Utils.seconds_to_biggest_unit import seconds_to_biggest_unit
-import time, sys
+import time
+import sys
 from tqdm import tqdm
 from sklearn.utils._testing import ignore_warnings
 from sklearn.exceptions import ConvergenceWarning

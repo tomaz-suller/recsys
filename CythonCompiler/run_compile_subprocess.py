@@ -6,7 +6,10 @@ Created on 06/01/2018
 @author: Maurizio Ferrari Dacrema
 """
 
-import subprocess, os, sys, shutil
+import subprocess
+import os
+import sys
+import shutil
 
 
 def run_compile_subprocess(file_subfolder, file_to_compile_list):

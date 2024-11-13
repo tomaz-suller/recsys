@@ -10,7 +10,8 @@ from Recommenders.Recommender_import_list import *
 
 import traceback
 
-import os, multiprocessing
+import os
+import multiprocessing
 from functools import partial
 
 
