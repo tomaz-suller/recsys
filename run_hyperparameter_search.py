@@ -5,25 +5,39 @@ Created on 22/11/17
 
 @author: Maurizio Ferrari Dacrema
 """
-
-from Recommenders.Recommender_import_list import *
-
 import traceback
-
 import os
 import multiprocessing
 from functools import partial
 
-
-from Data_manager.Movielens.Movielens1MReader import Movielens1MReader
-from Data_manager.split_functions.split_train_validation_random_holdout import (
-    split_train_in_two_percentage_global_sample,
+from Recommenders.NonPersonalizedRecommender import Random, TopPop
+from Recommenders.SLIM import SLIMElasticNetRecommender
+from Recommenders.KNN import (
+    UserKNNCFRecommender,
+    ItemKNNCFRecommender,
+    ItemKNNCBFRecommender,
+    ItemKNN_CFCBF_Hybrid_Recommender,
 )
-
+from Recommenders.MatrixFactorization import (
+    PureSVDRecommender,
+)
+from Recommenders.MatrixFactorization.Cython.MatrixFactorizationImpressions_Cython import (
+    MatrixFactorization_FunkSVD_Cython,
+)
+from Recommenders.MatrixFactorization.Cython.MatrixFactorization_Cython import (
+    MatrixFactorization_BPR_Cython,
+)
+from Recommenders.GraphBased import P3alphaRecommender, RP3betaRecommender
+from Recommenders.SLIM.Cython.SLIM_BPR_Cython import SLIM_BPR_Cython
+from Evaluation.Evaluator import EvaluatorHoldout
 from HyperparameterTuning.run_hyperparameter_search import (
     runHyperparameterSearch_Collaborative,
     runHyperparameterSearch_Content,
     runHyperparameterSearch_Hybrid,
+)
+from Data_manager.competition import CompetitionReader
+from Data_manager.split_functions.split_train_validation_random_holdout import (
+    split_train_in_two_percentage_global_sample,
 )
 
 
@@ -39,7 +53,7 @@ def read_data_split_and_search():
         - A _best_result_test file which contains a dictionary with the results, on the test set, of the best solution chosen using the validation set
     """
 
-    dataReader = Movielens1MReader()
+    dataReader = CompetitionReader()
     dataset = dataReader.load_data()
 
     URM_train, URM_test = split_train_in_two_percentage_global_sample(
@@ -69,7 +83,6 @@ def read_data_split_and_search():
         SLIMElasticNetRecommender,
     ]
 
-    from Evaluation.Evaluator import EvaluatorHoldout
 
     cutoff_list = [5, 10, 20]
     metric_to_optimize = "MAP"
