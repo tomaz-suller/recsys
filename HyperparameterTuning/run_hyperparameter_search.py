@@ -47,7 +47,6 @@ from Recommenders.MatrixFactorization.Cython.MatrixFactorization_Cython import (
 from Recommenders.Neural.MultVAERecommender import (
     MultVAERecommender_OptimizerMask as MultVAERecommender,
 )
-from Recommenders.FactorizationMachines.LightFMRecommender import LightFMCFRecommender
 
 ######################################################################
 ##########                                                  ##########
@@ -68,10 +67,6 @@ from Recommenders.KNN.ItemKNN_CFCBF_Hybrid_Recommender import (
 )
 from Recommenders.KNN.UserKNN_CFCBF_Hybrid_Recommender import (
     UserKNN_CFCBF_Hybrid_Recommender,
-)
-from Recommenders.FactorizationMachines.LightFMRecommender import (
-    LightFMItemHybridRecommender,
-    LightFMUserHybridRecommender,
 )
 from Recommenders.FeatureWeighting.Cython.CFW_D_Similarity_Cython import (
     CFW_D_Similarity_Cython,
@@ -374,28 +369,6 @@ def runHyperparameterSearch_Hybrid(
                     run_KNNCFRecommender_on_similarity_type_partial(similarity_type)
 
             return
-
-        elif recommender_class in [
-            LightFMItemHybridRecommender,
-            LightFMUserHybridRecommender,
-        ]:
-            hyperparameters_range_dictionary = {
-                "epochs": Categorical([300]),
-                "n_components": Integer(1, 200),
-                "loss": Categorical(["bpr", "warp", "warp-kos"]),
-                "sgd_mode": Categorical(["adagrad", "adadelta"]),
-                "learning_rate": Real(low=1e-6, high=1e-1, prior="log-uniform"),
-                "item_alpha": Real(low=1e-5, high=1e-2, prior="log-uniform"),
-                "user_alpha": Real(low=1e-5, high=1e-2, prior="log-uniform"),
-            }
-
-            recommender_input_args = SearchInputRecommenderArgs(
-                CONSTRUCTOR_POSITIONAL_ARGS=[URM_train, ICM_object],
-                CONSTRUCTOR_KEYWORD_ARGS={},
-                FIT_POSITIONAL_ARGS=[],
-                FIT_KEYWORD_ARGS={},
-                EARLYSTOPPING_KEYWORD_ARGS=earlystopping_keywargs,
-            )
 
         #########################################################################################################
 
@@ -1081,27 +1054,6 @@ def runHyperparameterSearch_Collaborative(
             )
 
         ##########################################################################################################
-
-        if recommender_class is LightFMCFRecommender:
-            hyperparameters_range_dictionary = {
-                "epochs": Categorical([300]),
-                "n_components": Integer(1, 200),
-                "loss": Categorical(["bpr", "warp", "warp-kos"]),
-                "sgd_mode": Categorical(["adagrad", "adadelta"]),
-                "learning_rate": Real(low=1e-6, high=1e-1, prior="log-uniform"),
-                "item_alpha": Real(low=1e-5, high=1e-2, prior="log-uniform"),
-                "user_alpha": Real(low=1e-5, high=1e-2, prior="log-uniform"),
-            }
-
-            recommender_input_args = SearchInputRecommenderArgs(
-                CONSTRUCTOR_POSITIONAL_ARGS=[URM_train],
-                CONSTRUCTOR_KEYWORD_ARGS={},
-                FIT_POSITIONAL_ARGS=[],
-                FIT_KEYWORD_ARGS={},
-                EARLYSTOPPING_KEYWORD_ARGS=earlystopping_keywargs,
-            )
-
-        #########################################################################################################
 
         if recommender_class is MultVAERecommender:
             hyperparameters_range_dictionary = {
