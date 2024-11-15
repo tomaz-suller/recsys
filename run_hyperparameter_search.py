@@ -72,15 +72,13 @@ def read_data_split_and_search():
     collaborative_algorithm_list = [
         Random,
         TopPop,
-        P3alphaRecommender,
-        RP3betaRecommender,
-        ItemKNNCFRecommender,
-        UserKNNCFRecommender,
+        ItemKNNCFRecommender.ItemKNNCFRecommender,
+        UserKNNCFRecommender.UserKNNCFRecommender,
         MatrixFactorization_BPR_Cython,
         MatrixFactorization_FunkSVD_Cython,
-        PureSVDRecommender,
+        PureSVDRecommender.PureSVDRecommender,
         SLIM_BPR_Cython,
-        SLIMElasticNetRecommender,
+        SLIMElasticNetRecommender.SLIMElasticNetRecommender,
     ]
 
 

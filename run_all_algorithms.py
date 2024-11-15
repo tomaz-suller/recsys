@@ -1,7 +1,8 @@
 import os
 import traceback
 import warnings
-# from concurrent.futures import ProcessPoolExecutor, as_completed
+from pathlib import Path
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 from Recommenders.SLIM.SLIMElasticNetRecommender import SLIMElasticNetRecommender
 from Recommenders.KNN.UserKNNCFRecommender import UserKNNCFRecommender
@@ -31,6 +32,8 @@ from Recommenders.BaseCBFRecommender import (
     BaseUserCBFRecommender,
 )
 from Evaluation.Evaluator import EvaluatorHoldout
+
+OUTPUT_PATH = Path("./result_experiments/")
 
 
 def _get_instance(recommender_class, URM_train, ICM_all, UCM_all):
@@ -100,7 +103,8 @@ def test_recommender(recommender_class) -> str:
             "Algorithm: {} - Exception: {}\n".format(recommender_class, str(e))
         )
 
-    return "\n".join(log_buffer)
+    with (OUTPUT_PATH / f"{recommender_class}.log").open("w") as f:
+        f.write("\n".join(log_buffer))
 
 
 if __name__ == "__main__":
@@ -114,19 +118,19 @@ if __name__ == "__main__":
     UCM_all = None
 
     recommender_class_list = [
-        SLIMElasticNetRecommender,
-        UserKNNCFRecommender,
-        IALSRecommender,
-        EASE_R_Recommender,
-        ItemKNNCFRecommender,
-        P3alphaRecommender,
-        RP3betaRecommender,
-        PureSVDRecommender,
-        NMFRecommender,
         UserKNNCBFRecommender,
         ItemKNNCBFRecommender,
+        UserKNNCFRecommender,
+        ItemKNNCFRecommender,
         UserKNN_CFCBF_Hybrid_Recommender,
         ItemKNN_CFCBF_Hybrid_Recommender,
+        SLIMElasticNetRecommender,
+        PureSVDRecommender,
+        NMFRecommender,
+        IALSRecommender,
+        # EASE_R_Recommender,
+        # P3alphaRecommender,
+        # RP3betaRecommender,
     ]
 
     evaluator = EvaluatorHoldout(URM_test, [5, 20], exclude_seen=True)
@@ -145,20 +149,16 @@ if __name__ == "__main__":
     if not os.path.exists(output_root_path):
         os.makedirs(output_root_path)
 
-    # logs = []
-    # with ProcessPoolExecutor() as p:
-    #     futures = [
-    #         p.submit(test_recommender, recommender)
-    #         for recommender in recommender_class_list
-    #     ]
-    #     for future in as_completed(futures):
-    #         try:
-    #             logs.append(future.result())
-    #         except Exception as e:
-    #             traceback.print_exc()
-    #             logs.append(str(e))
-    logs = [test_recommender(recommender) for recommender in recommender_class_list]
-
-    print(type(logs))
-    with open(output_root_path + "result_all_algorithms.txt", "a") as f:
-        f.write("\n\n".join(logs))
+    logs = []
+    with ProcessPoolExecutor() as p:
+        futures = [
+            p.submit(test_recommender, recommender)
+            for recommender in recommender_class_list
+        ]
+        for future in as_completed(futures):
+            try:
+                logs.append(future.result())
+            except Exception as e:
+                traceback.print_exc()
+                logs.append(str(e))
+    # logs = [test_recommender(recommender) for recommender in recommender_class_list]
