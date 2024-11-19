@@ -997,7 +997,7 @@ def runHyperparameterSearch_Collaborative(
         if recommender_class is SLIM_BPR_Cython:
             hyperparameters_range_dictionary = {
                 "topK": Integer(5, 1000),
-                "epochs": Categorical([1500]),
+                "epochs": Categorical([39]),
                 "symmetric": Categorical([True, False]),
                 "sgd_mode": Categorical(["sgd", "adagrad", "adam"]),
                 "lambda_i": Real(low=1e-5, high=1e-2, prior="log-uniform"),
