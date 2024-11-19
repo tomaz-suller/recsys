@@ -36,6 +36,7 @@ from Recommenders.MatrixFactorization.PureSVDRecommender import (
     PureSVDRecommender,
     PureSVDItemRecommender,
 )
+from Recommenders.MatrixFactorization.Cython.MatrixFactorizationImpressions_Cython import MatrixFactorization_FunkSVD_Cython
 from Recommenders.MatrixFactorization.IALSRecommender import IALSRecommender
 from Recommenders.MatrixFactorization.NMFRecommender import NMFRecommender
 from Recommenders.MatrixFactorization.Cython.MatrixFactorization_Cython import (
@@ -843,7 +844,7 @@ def runHyperparameterSearch_Collaborative(
 
         ##########################################################################################################
 
-        if recommender_class is MatrixFactorization_SVDpp_Cython:
+        if recommender_class in [MatrixFactorization_SVDpp_Cython, MatrixFactorization_FunkSVD_Cython]:
             hyperparameters_range_dictionary = {
                 "sgd_mode": Categorical(["sgd", "adagrad", "adam"]),
                 "epochs": Categorical([500]),
