@@ -1,14 +1,13 @@
 import traceback
 import os
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from datetime import datetime
 from functools import partial
+from itertools import pairwise
 from multiprocessing import cpu_count
-from pathlib import Path
 
 import numpy as np
+from scipy.sparse import csr_matrix
 
-from Recommenders.NonPersonalizedRecommender import Random, TopPop
 from Recommenders.SLIM import SLIMElasticNetRecommender
 from Recommenders.KNN import (
     UserKNNCFRecommender,
@@ -23,9 +22,6 @@ from Recommenders.MatrixFactorization import (
 )
 from Recommenders.MatrixFactorization.Cython.MatrixFactorization_Cython import (
     MatrixFactorization_BPR_Cython,
-    MatrixFactorization_AsySVD_Cython,
-    MatrixFactorization_SVDpp_Cython,
-    MatrixFactorization_WARP_Cython,
 )
 from Recommenders.SLIM.Cython.SLIM_BPR_Cython import SLIM_BPR_Cython
 from Recommenders.GraphBased.P3alphaRecommender import P3alphaRecommender
@@ -42,7 +38,13 @@ from Data_manager.split_functions.split_train_validation_random_holdout import (
 )
 
 
-def read_data_split_and_search():
+def most_interaction_user_mask(urm: csr_matrix, largest: int) -> np.ndarray:
+    profile_sizes = np.ediff1d(urm.indptr)
+    cutoff = np.sort(profile_sizes)[-largest]
+    return profile_sizes > cutoff
+
+
+def tune(args: tuple[str, csr_matrix, csr_matrix, csr_matrix]):
     """
     This function provides a simple example on how to tune parameters of a given algorithm
 
@@ -54,41 +56,22 @@ def read_data_split_and_search():
         - A _best_result_test file which contains a dictionary with the results, on the test set, of the best solution chosen using the validation set
     """
 
-    dataReader = CompetitionReader()
-    dataset = dataReader.load_data()
+    name, URM_train, URM_validation, URM_test = args
+    output_folder_path = f"result_experiments_{name}/"
 
-    # TODO Consider removing test to train with more data
-    URM_train, URM_test = split_train_in_two_percentage_global_sample(
-        dataset.get_URM_all(), train_percentage=0.80
-    )
-    URM_train, URM_validation = split_train_in_two_percentage_global_sample(
-        URM_train, train_percentage=0.80
-    )
-
-    profile_sizes = np.ediff1d(URM_train.indptr)
-    sorted_profile_indices = np.argsort(profile_sizes)
-    big_profile_users = sorted_profile_indices[URM_train.shape[0]//2:]
-
-    output_folder_path = Path("results") / datetime.now().isoformat()
-    output_folder_path.mkdir(parents=True, exist_ok=False)
-    # For compatibility with the rest of the framework
-    output_folder_path = str(output_folder_path)
+    # If directory does not exist, create
+    if not os.path.exists(output_folder_path):
+        os.makedirs(output_folder_path)
 
     collaborative_algorithm_list = [
-        Random,
-        TopPop,
+        P3alphaRecommender,
+        RP3betaRecommender,
         PureSVDRecommender.PureSVDItemRecommender,
         ItemKNNCFRecommender.ItemKNNCFRecommender,
         UserKNNCFRecommender.UserKNNCFRecommender,
-        P3alphaRecommender,
-        RP3betaRecommender,
-        SLIMElasticNetRecommender.SLIMElasticNetRecommender,
-        SLIM_BPR_Cython,
         # MatrixFactorization_BPR_Cython,
-        # MatrixFactorization_SVDpp_Cython,
-        # MatrixFactorization_WARP_Cython,
-        # MatrixFactorization_BPR_Cython,
-        # MatrixFactorization_AsySVD_Cython
+        # SLIM_BPR_Cython,
+        # SLIMElasticNetRecommender.SLIMElasticNetRecommender,
     ]
 
     cutoff_list = [10, 20]
@@ -98,16 +81,8 @@ def read_data_split_and_search():
     n_cases = 100
     n_random_starts = 20
 
-    evaluator_validation = EvaluatorHoldout(
-        URM_validation,
-        cutoff_list=cutoff_list,
-        ignore_users=big_profile_users,
-    )
-    evaluator_test = EvaluatorHoldout(
-        URM_test,
-        cutoff_list=cutoff_list,
-        ignore_users=big_profile_users,
-    )
+    evaluator_validation = EvaluatorHoldout(URM_validation, cutoff_list=cutoff_list)
+    evaluator_test = EvaluatorHoldout(URM_test, cutoff_list=cutoff_list)
 
     runParameterSearch_Collaborative_partial = partial(
         runHyperparameterSearch_Collaborative,
@@ -126,27 +101,27 @@ def read_data_split_and_search():
         evaluate_on_test="no",
     )
 
-    with ProcessPoolExecutor(max_workers=cpu_count()) as executor:
-        futures = {
-            executor.submit(
-                runParameterSearch_Collaborative_partial, recommender
-            ): recommender
-            for recommender in collaborative_algorithm_list
-        }
-        for future in as_completed(futures):
-            recommender = futures[future]
-            try:
-                future.result()
-            except Exception as e:
-                print("On recommender {} Exception {}".format(recommender, e))
-                traceback.print_exc()
+    # with ProcessPoolExecutor(max_workers=cpu_count()) as executor:
+    #     futures = {
+    #         executor.submit(
+    #             runParameterSearch_Collaborative_partial, recommender
+    #         ): recommender
+    #         for recommender in collaborative_algorithm_list
+    #     }
+    #     for future in as_completed(futures):
+    #         recommender = futures[future]
+    #         try:
+    #             future.result()
+    #         except Exception as e:
+    #             print("On recommender {} Exception {}".format(recommender, e))
+    #             traceback.print_exc()
 
-    # for recommender_class in collaborative_algorithm_list:
-    #     try:
-    #         runParameterSearch_Collaborative_partial(recommender_class)
-    #     except Exception as e:
-    #         print("On recommender {} Exception {}".format(recommender_class, str(e)))
-    #         traceback.print_exc()
+    for recommender_class in collaborative_algorithm_list:
+        try:
+            runParameterSearch_Collaborative_partial(recommender_class)
+        except Exception as e:
+            print("On recommender {} Exception {}".format(recommender_class, str(e)))
+            traceback.print_exc()
 
     ################################################################################################
     ###### Content Baselines
@@ -206,4 +181,54 @@ def read_data_split_and_search():
 
 
 if __name__ == "__main__":
-    read_data_split_and_search()
+    NUMBER_GROUPS = 10
+
+    dataReader = CompetitionReader()
+    dataset = dataReader.load_data()
+
+    URM_train, URM_test = split_train_in_two_percentage_global_sample(
+        dataset.get_URM_all(), train_percentage=0.80
+    )
+    URM_train, URM_validation = split_train_in_two_percentage_global_sample(
+        URM_train, train_percentage=0.80
+    )
+
+    number_users = URM_train.shape[0]
+    group_boundary_indices: np.ndarray = np.linspace(
+        number_users // 3, number_users, NUMBER_GROUPS
+    ).astype("int")
+    group_boundary_indices[0] = 0
+    group_boundary_indices[-1] -= 1
+
+    profile_sizes = np.ediff1d(URM_train.indptr)
+    sorted_profile_sizes = np.sort(profile_sizes)
+
+    arguments = []
+
+    for min_, max_ in pairwise(group_boundary_indices):
+        upper_bound = sorted_profile_sizes[max_]
+        lower_bound = sorted_profile_sizes[min_]
+
+        mask = np.logical_and(
+            profile_sizes < upper_bound,
+            profile_sizes >= lower_bound,
+        )
+
+        if (number_users := np.sum(mask)) == 0:
+            continue
+
+        URM_train_group = URM_train[mask]
+        URM_validation_group = URM_validation[mask]
+        URM_test_group = URM_test[mask]
+
+        arguments.append(
+            (
+                f"{lower_bound}_{upper_bound}",
+                URM_train_group,
+                URM_validation_group,
+                URM_test_group,
+            )
+        )
+
+    with ProcessPoolExecutor() as pool:
+        pool.map(tune, arguments)
