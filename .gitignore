@@ -1,3 +1,10 @@
+*.tar.gz
+*.csv
+*.json
+*.pkl
+*.npz
+*result*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
