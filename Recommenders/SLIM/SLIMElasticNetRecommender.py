@@ -4,22 +4,25 @@
 @author: Massimo Quadrana, Cesare Bernardis
 """
 
+import sys
+import time
+
 import numpy as np
 import scipy.sparse as sps
-from Recommenders.Recommender_utils import check_matrix
+from sklearn.exceptions import ConvergenceWarning
 from sklearn.linear_model import ElasticNet
+from sklearn.utils._testing import ignore_warnings
+from tqdm import tqdm
+
 from Recommenders.BaseSimilarityMatrixRecommender import (
     BaseItemSimilarityMatrixRecommender,
 )
+from Recommenders.Recommender_utils import check_matrix
 from Recommenders.Similarity.Compute_Similarity_Python import (
     Incremental_Similarity_Builder,
 )
+from Recommenders.Similarity.Compute_Similarity import Compute_Similarity
 from Utils.seconds_to_biggest_unit import seconds_to_biggest_unit
-import time
-import sys
-from tqdm import tqdm
-from sklearn.utils._testing import ignore_warnings
-from sklearn.exceptions import ConvergenceWarning
 
 # os.environ["PYTHONWARNINGS"] = ('ignore::exceptions.ConvergenceWarning:sklearn.linear_model')
 # os.environ["PYTHONWARNINGS"] = ('ignore:Objective did not converge:ConvergenceWarning:')
@@ -46,7 +49,14 @@ class SLIMElasticNetRecommender(BaseItemSimilarityMatrixRecommender):
         super(SLIMElasticNetRecommender, self).__init__(URM_train, verbose=verbose)
 
     @ignore_warnings(category=ConvergenceWarning)
-    def fit(self, l1_ratio=0.1, alpha=1.0, positive_only=True, topK=100):
+    def fit(
+        self,
+        l1_ratio=0.1,
+        alpha=1.0,
+        positive_only=True,
+        topK=100,
+        do_feature_selection=False,
+    ):
         assert (
             l1_ratio >= 0 and l1_ratio <= 1
         ), "{}: l1_ratio must be between 0 and 1, provided value was {}".format(
@@ -56,6 +66,7 @@ class SLIMElasticNetRecommender(BaseItemSimilarityMatrixRecommender):
         self.l1_ratio = l1_ratio
         self.positive_only = positive_only
         self.topK = topK
+        self.do_feature_selection = do_feature_selection
 
         # initialize the ElasticNet model
         self.model = ElasticNet(
@@ -70,7 +81,9 @@ class SLIMElasticNetRecommender(BaseItemSimilarityMatrixRecommender):
             tol=1e-4,
         )
 
-        URM_train = check_matrix(self.URM_train, "csc", dtype=np.float32)
+        URM_train: sps.csc_matrix = check_matrix(
+            self.URM_train, "csc", dtype=np.float32
+        )
 
         n_items = URM_train.shape[1]
 
@@ -78,27 +91,43 @@ class SLIMElasticNetRecommender(BaseItemSimilarityMatrixRecommender):
             self.n_items, initial_data_block=self.n_items * self.topK, dtype=np.float32
         )
 
+        if self.do_feature_selection:
+            item_similarity = Compute_Similarity(
+                URM_train, use_implementation="cython", similarity="cosine"
+            ).compute_similarity()
+
         start_time = time.time()
         start_time_printBatch = start_time
 
         # fit each item's factors sequentially (not in parallel)
         for currentItem in range(n_items):
             # get the target column
-            y = URM_train[:, currentItem].toarray()
+            iteration_urm = URM_train.copy()
+            y = iteration_urm[:, currentItem].toarray()
 
             # set the j-th column of X to zero
-            start_pos = URM_train.indptr[currentItem]
-            end_pos = URM_train.indptr[currentItem + 1]
+            start_pos = iteration_urm.indptr[currentItem]
+            end_pos = iteration_urm.indptr[currentItem + 1]
+            iteration_urm.data[start_pos:end_pos] = 0.0
 
-            current_item_data_backup = URM_train.data[start_pos:end_pos].copy()
-            URM_train.data[start_pos:end_pos] = 0.0
+            feature_selection_performed = False
+            if self.do_feature_selection:
+                row_start = item_similarity.indptr[currentItem]
+                row_end = item_similarity.indptr[currentItem + 1]
+                if row_start == row_end:
+                    continue
+                feature_selection_performed = True
+                similar_items = item_similarity.indices[row_start:row_end]
+                iteration_urm = iteration_urm[:, similar_items]
 
             # fit one ElasticNet model per column
-            self.model.fit(URM_train, y)
+            self.model.fit(iteration_urm, y)
 
             # self.model.coef_ contains the coefficient of the ElasticNet model
             # let's keep only the non-zero values
             nonzero_model_coef_index = self.model.sparse_coef_.indices
+            if self.do_feature_selection and feature_selection_performed:
+                nonzero_model_coef_index = similar_items[nonzero_model_coef_index]
             nonzero_model_coef_value = self.model.sparse_coef_.data
 
             # Check if there are more data points than topK, if so, extract the set of K best values
@@ -121,8 +150,7 @@ class SLIMElasticNetRecommender(BaseItemSimilarityMatrixRecommender):
                 data_list_to_add=nonzero_model_coef_value,
             )
 
-            # finally, replace the original values of the j-th column
-            URM_train.data[start_pos:end_pos] = current_item_data_backup
+            del iteration_urm
 
             elapsed_time = time.time() - start_time
             new_time_value, new_time_unit = seconds_to_biggest_unit(elapsed_time)
@@ -146,8 +174,8 @@ class SLIMElasticNetRecommender(BaseItemSimilarityMatrixRecommender):
         self.W_sparse = similarity_builder.get_SparseMatrix()
 
 
-from multiprocessing import Pool, cpu_count, shared_memory
 from functools import partial
+from multiprocessing import Pool, cpu_count, shared_memory
 
 
 def create_shared_memory(a):
