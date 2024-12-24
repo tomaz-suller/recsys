@@ -22,6 +22,7 @@ from Recommenders.KNN.UserKNNCFRecommender import UserKNNCFRecommender
 from Recommenders.KNN.ItemKNNCFRecommender import ItemKNNCFRecommender
 from Recommenders.GraphBased.P3alphaRecommender import P3alphaRecommender
 from Recommenders.GraphBased.RP3betaRecommender import RP3betaRecommender
+from Recommenders.GraphBased.RP3betaRecommenderICM import RP3betaRecommenderICM
 from Recommenders.EASE_R.EASE_R_Recommender import EASE_R_Recommender
 
 # KNN machine learning
@@ -36,7 +37,9 @@ from Recommenders.MatrixFactorization.PureSVDRecommender import (
     PureSVDRecommender,
     PureSVDItemRecommender,
 )
-from Recommenders.MatrixFactorization.Cython.MatrixFactorizationImpressions_Cython import MatrixFactorization_FunkSVD_Cython
+from Recommenders.MatrixFactorization.Cython.MatrixFactorizationImpressions_Cython import (
+    MatrixFactorization_FunkSVD_Cython,
+)
 from Recommenders.MatrixFactorization.IALSRecommender import IALSRecommender
 from Recommenders.MatrixFactorization.NMFRecommender import NMFRecommender
 from Recommenders.MatrixFactorization.Cython.MatrixFactorization_Cython import (
@@ -370,6 +373,23 @@ def runHyperparameterSearch_Hybrid(
                     run_KNNCFRecommender_on_similarity_type_partial(similarity_type)
 
             return
+
+        if recommender_class is RP3betaRecommenderICM:
+            hyperparameters_range_dictionary = {
+                "topK": Integer(5, 1000),
+                "alpha": Real(low=0, high=2, prior="uniform"),
+                "beta": Real(low=0, high=2, prior="uniform"),
+                "delta": Real(low=0, high=1, prior="uniform"),
+                "normalize_similarity": Categorical([True, False]),
+            }
+
+            recommender_input_args = SearchInputRecommenderArgs(
+                CONSTRUCTOR_POSITIONAL_ARGS=[URM_train, ICM_object],
+                CONSTRUCTOR_KEYWORD_ARGS={},
+                FIT_POSITIONAL_ARGS=[],
+                FIT_KEYWORD_ARGS={},
+                EARLYSTOPPING_KEYWORD_ARGS={},
+            )
 
         #########################################################################################################
 
@@ -814,6 +834,7 @@ def runHyperparameterSearch_Collaborative(
                 "topK": Integer(5, 1000),
                 "alpha": Real(low=0, high=2, prior="uniform"),
                 "normalize_similarity": Categorical([True, False]),
+                "implicit": Categorical([True]),
             }
 
             recommender_input_args = SearchInputRecommenderArgs(
@@ -844,10 +865,13 @@ def runHyperparameterSearch_Collaborative(
 
         ##########################################################################################################
 
-        if recommender_class in [MatrixFactorization_SVDpp_Cython, MatrixFactorization_FunkSVD_Cython]:
+        if recommender_class in [
+            MatrixFactorization_SVDpp_Cython,
+            MatrixFactorization_FunkSVD_Cython,
+        ]:
             hyperparameters_range_dictionary = {
                 "sgd_mode": Categorical(["sgd", "adagrad", "adam"]),
-                "epochs": Categorical([500]),
+                "epochs": Categorical([19]),
                 "use_bias": Categorical([True, False]),
                 "batch_size": Categorical(
                     [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]
@@ -877,7 +901,7 @@ def runHyperparameterSearch_Collaborative(
         if recommender_class is MatrixFactorization_AsySVD_Cython:
             hyperparameters_range_dictionary = {
                 "sgd_mode": Categorical(["sgd", "adagrad", "adam"]),
-                "epochs": Categorical([500]),
+                "epochs": Categorical([19]),
                 "use_bias": Categorical([True, False]),
                 "batch_size": Categorical([1]),
                 "num_factors": Integer(1, 200),
@@ -900,7 +924,7 @@ def runHyperparameterSearch_Collaborative(
         if recommender_class is MatrixFactorization_BPR_Cython:
             hyperparameters_range_dictionary = {
                 "sgd_mode": Categorical(["sgd", "adagrad", "adam"]),
-                "epochs": Categorical([1500]),
+                "epochs": Categorical([19]),
                 "num_factors": Integer(1, 200),
                 "batch_size": Categorical(
                     [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]
