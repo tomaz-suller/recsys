@@ -215,6 +215,7 @@ def runHyperparameterSearch_FeatureWeighting(
         output_file_name_root=output_file_name_root,
         metric_to_optimize=metric_to_optimize,
         cutoff_to_optimize=cutoff_to_optimize,
+        n_jobs=-1,
     )
 
 

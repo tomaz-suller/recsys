@@ -344,6 +344,7 @@ class SearchBayesianSkopt(SearchAbstractClass):
         max_total_time=None,
         terminate_on_memory_error=True,
         terminate_on_other_error=False,
+        n_jobs=-1,
     ):
         """
 
@@ -365,7 +366,7 @@ class SearchBayesianSkopt(SearchAbstractClass):
         """
 
         ### default hyperparameters for BayesianSkopt are set here
-        self._set_skopt_params()
+        self._set_skopt_params(n_jobs=n_jobs)
 
         self._set_search_attributes(
             recommender_input_args,
@@ -386,7 +387,6 @@ class SearchBayesianSkopt(SearchAbstractClass):
 
         self.n_random_starts = n_random_starts
         self.n_calls = n_cases
-        self.n_jobs = 1
         self.n_loaded_counter = 0
 
         self.max_total_time = max_total_time
