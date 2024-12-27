@@ -37,10 +37,7 @@ from HyperparameterTuning.run_hyperparameter_search import (
     runHyperparameterSearch_Content,
     runHyperparameterSearch_Hybrid,
 )
-from Data_manager.competition import CompetitionReader
-from Data_manager.split_functions.split_train_validation_random_holdout import (
-    split_train_in_two_percentage_global_sample,
-)
+from Data_manager.competition import load
 
 
 def read_data_split_and_search():
@@ -54,26 +51,13 @@ def read_data_split_and_search():
         - A _best_result_validation file which contains a dictionary with the results of the best solution on the validation
         - A _best_result_test file which contains a dictionary with the results, on the test set, of the best solution chosen using the validation set
     """
+    icm, _, urm_train, urm_val, _ = load()
 
-    dataReader = CompetitionReader()
-    dataset = dataReader.load_data()
-
-    # TODO Consider removing test to train with more data
-    URM_train, URM_test = split_train_in_two_percentage_global_sample(
-        dataset.get_URM_all(), train_percentage=0.80
-    )
-    URM_train, URM_validation = split_train_in_two_percentage_global_sample(
-        URM_train, train_percentage=0.80
-    )
-
-    profile_sizes = np.ediff1d(URM_train.indptr)
-    sorted_profile_indices = np.argsort(profile_sizes)
-    big_profile_users = sorted_profile_indices[URM_train.shape[0]//2:]
-
-    output_folder_path = Path("results") / datetime.now().isoformat()
-    output_folder_path.mkdir(parents=True, exist_ok=False)
-    # For compatibility with the rest of the framework
-    output_folder_path = str(output_folder_path)
+    ICM_name = "ICM_all"
+    ICM_object = icm
+    URM_train = urm_train
+    URM_validation = urm_val
+    output_folder_path = str(output_path)
 
     collaborative_algorithm_list = [
         Random,
