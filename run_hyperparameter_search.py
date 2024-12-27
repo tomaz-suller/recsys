@@ -40,7 +40,7 @@ from HyperparameterTuning.run_hyperparameter_search import (
 from Data_manager.competition import load
 
 
-def read_data_split_and_search():
+def read_data_split_and_search(users_to_ignore: list[int], output_path: Path):
     """
     This function provides a simple example on how to tune parameters of a given algorithm
 
@@ -91,12 +91,7 @@ def read_data_split_and_search():
     evaluator_validation = EvaluatorHoldout(
         URM_validation,
         cutoff_list=cutoff_list,
-        ignore_users=big_profile_users,
-    )
-    evaluator_test = EvaluatorHoldout(
-        URM_test,
-        cutoff_list=cutoff_list,
-        ignore_users=big_profile_users,
+        ignore_users=users_to_ignore,
     )
 
     runParameterSearch_Collaborative_partial = partial(
@@ -200,4 +195,20 @@ def read_data_split_and_search():
 
 
 if __name__ == "__main__":
-    read_data_split_and_search()
+    NUMBER_BLOCKS = 10
+
+    base_output_path = Path("results") / datetime.now().isoformat()
+    base_output_path.mkdir(parents=True, exist_ok=False)
+
+    _, _, urm_train, _, _ = load()
+    profile_lengths = np.ediff1d(urm_train.indptr)
+    sorted_users = np.argsort(profile_lengths)
+    block_size = len(sorted_users) // NUMBER_BLOCKS
+    for i in range(NUMBER_BLOCKS+1):
+        users_to_consider = sorted_users[i * block_size : (i + 1) * block_size]
+        if not users_to_consider:
+            break
+        users_to_ignore = np.setdiff1d(sorted_users, users_to_consider)
+        output_path = base_output_path / f"block_{i}"
+        output_path.mkdir()
+        read_data_split_and_search(users_to_ignore, output_path)
