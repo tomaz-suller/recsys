@@ -76,7 +76,12 @@ def read_data_split_and_search():
         # MatrixFactorization_AsySVD_Cython
     ]
 
-    cutoff_list = [10, 20]
+    hybrid_algorithm_list = [
+        # RP3betaRecommenderICM,
+        # ItemKNN_CFCBF_Hybrid_Recommender,
+    ]
+
+    cutoff_list = [10, 20, 30]
     metric_to_optimize = "MAP"
     cutoff_to_optimize = 10
 
@@ -169,22 +174,26 @@ def read_data_split_and_search():
                 metric_to_optimize=metric_to_optimize,
                 cutoff_to_optimize=cutoff_to_optimize,
                 evaluator_validation=evaluator_validation,
-                evaluator_test=evaluator_test,
-                output_folder_path=output_folder_path,
-                parallelizeKNN=True,
-                allow_weighting=True,
-                resume_from_saved=True,
-                similarity_type_list=None,
-                ICM_name=ICM_name,
-                ICM_object=ICM_object.copy(),
-                n_cases=n_cases,
-                n_random_starts=n_random_starts,
-            )
+        evaluator_test=None,
+        output_folder_path=output_folder_path,
+        parallelizeKNN=True,
+        allow_weighting=True,
+        resume_from_saved=True,
+        similarity_type_list=None,
+        ICM_name=ICM_name,
+        ICM_object=ICM_object.copy(),
+        n_cases=n_cases,
+        n_random_starts=n_random_starts,
+        evaluate_on_test="no",
+    )
 
+    for recommender_class in hybrid_algorithm_list:
+        try:
+            runParameterSearch_Hybrid_partial(recommender_class)
         except Exception as e:
             print(
                 "On recommender {} Exception {}".format(
-                    ItemKNN_CFCBF_Hybrid_Recommender, str(e)
+                    recommender_class, str(e)
                 )
             )
             traceback.print_exc()
