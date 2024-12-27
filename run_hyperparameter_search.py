@@ -30,6 +30,7 @@ from Recommenders.MatrixFactorization.Cython.MatrixFactorization_Cython import (
 from Recommenders.SLIM.Cython.SLIM_BPR_Cython import SLIM_BPR_Cython
 from Recommenders.GraphBased.P3alphaRecommender import P3alphaRecommender
 from Recommenders.GraphBased.RP3betaRecommender import RP3betaRecommender
+from Recommenders.GraphBased.RP3betaRecommenderICM import RP3betaRecommenderICM
 from Evaluation.Evaluator import EvaluatorHoldout
 from HyperparameterTuning.run_hyperparameter_search import (
     runHyperparameterSearch_Collaborative,
