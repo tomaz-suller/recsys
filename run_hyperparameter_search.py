@@ -204,6 +204,7 @@ if __name__ == "__main__":
     profile_lengths = np.ediff1d(urm_train.indptr)
     sorted_users = np.argsort(profile_lengths)
     block_size = len(sorted_users) // NUMBER_BLOCKS
+    block_args = {}
     for i in range(NUMBER_BLOCKS+1):
         users_to_consider = sorted_users[i * block_size : (i + 1) * block_size]
         if users_to_consider.size == 0:
@@ -211,4 +212,23 @@ if __name__ == "__main__":
         users_to_ignore = np.setdiff1d(sorted_users, users_to_consider)
         output_path = base_output_path / f"block_{i}"
         output_path.mkdir()
-        read_data_split_and_search(users_to_ignore, output_path)
+        # read_data_split_and_search(users_to_ignore, output_path)
+        block_args[i] = {
+            "users_to_ignore": users_to_ignore,
+            "output_path": output_path,
+        }
+
+    with ProcessPoolExecutor(max_workers=cpu_count()) as executor:
+        futures = {
+            executor.submit(
+                read_data_split_and_search, **kwargs
+            ): i
+            for i, kwargs in block_args.items()
+        }
+        for future in as_completed(futures):
+            i = futures[future]
+            try:
+                future.result()
+            except Exception as e:
+                print("On block {} Exception {}".format(i, e))
+                traceback.print_exc()
