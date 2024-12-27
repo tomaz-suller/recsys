@@ -64,6 +64,20 @@ class ScoresHybridRecommender(BaseRecommender):
         return item_weights
 
 
+class UserWideHybridRecommender(BaseRecommender):
+    RECOMMENDER_NAME = "UserWideHybridRecommender"
+
+    def __init__(self, URM_train, group_users: dict, group_recommenders: dict[int, BaseRecommender], verbose=True):
+        super().__init__(URM_train, verbose=verbose)
+        self.user_groups = {user: group for group, users in group_users.items() for user in users}
+        self.group_recommenders = group_recommenders
+
+    def _compute_item_score(self, user_id_array, items_to_compute=None):
+        for user_id in user_id_array:
+            user_group = self.user_groups[user_id]
+            return self.group_recommenders[user_group]._compute_item_score(user_id_array, items_to_compute)
+
+
 # # %% [markdown] slideshow={"slide_type": "slide"}
 # # # Some tricks, user-wise hybrids
 # #
