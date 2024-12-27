@@ -103,11 +103,11 @@ def read_data_split_and_search(users_to_ignore: list[int], output_path: Path):
         n_random_starts=n_random_starts,
         evaluator_validation_earlystopping=evaluator_validation,
         evaluator_validation=evaluator_validation,
-        evaluator_test=evaluator_test,
+        evaluator_test=None,
         output_folder_path=output_folder_path,
         resume_from_saved=True,
         similarity_type_list=None,
-        parallelizeKNN=False,
+        parallelizeKNN=True,
         evaluate_on_test="no",
     )
 
@@ -206,7 +206,7 @@ if __name__ == "__main__":
     block_size = len(sorted_users) // NUMBER_BLOCKS
     for i in range(NUMBER_BLOCKS+1):
         users_to_consider = sorted_users[i * block_size : (i + 1) * block_size]
-        if not users_to_consider:
+        if users_to_consider.size == 0:
             break
         users_to_ignore = np.setdiff1d(sorted_users, users_to_consider)
         output_path = base_output_path / f"block_{i}"
