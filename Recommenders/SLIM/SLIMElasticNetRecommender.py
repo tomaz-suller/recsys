@@ -6,6 +6,8 @@
 
 import sys
 import time
+from functools import partial
+from multiprocessing import Pool, cpu_count, shared_memory
 
 import numpy as np
 import scipy.sparse as sps
@@ -18,14 +20,11 @@ from Recommenders.BaseSimilarityMatrixRecommender import (
     BaseItemSimilarityMatrixRecommender,
 )
 from Recommenders.Recommender_utils import check_matrix
+from Recommenders.Similarity.Compute_Similarity import Compute_Similarity
 from Recommenders.Similarity.Compute_Similarity_Python import (
     Incremental_Similarity_Builder,
 )
-from Recommenders.Similarity.Compute_Similarity import Compute_Similarity
 from Utils.seconds_to_biggest_unit import seconds_to_biggest_unit
-
-# os.environ["PYTHONWARNINGS"] = ('ignore::exceptions.ConvergenceWarning:sklearn.linear_model')
-# os.environ["PYTHONWARNINGS"] = ('ignore:Objective did not converge:ConvergenceWarning:')
 
 
 class SLIMElasticNetRecommender(BaseItemSimilarityMatrixRecommender):
@@ -46,7 +45,7 @@ class SLIMElasticNetRecommender(BaseItemSimilarityMatrixRecommender):
     RECOMMENDER_NAME = "SLIMElasticNetRecommender"
 
     def __init__(self, URM_train, verbose=True):
-        super(SLIMElasticNetRecommender, self).__init__(URM_train, verbose=verbose)
+        super().__init__(URM_train, verbose=verbose)
 
     @ignore_warnings(category=ConvergenceWarning)
     def fit(
@@ -174,8 +173,12 @@ class SLIMElasticNetRecommender(BaseItemSimilarityMatrixRecommender):
         self.W_sparse = similarity_builder.get_SparseMatrix()
 
 
-from functools import partial
-from multiprocessing import Pool, cpu_count, shared_memory
+class SLIMElasticNetICMRecommender(SLIMElasticNetRecommender):
+    RECOMMENDER_NAME = "SLIMElasticNetICMRecommender"
+
+    def __init__(self, urm, icm: sps.csr_matrix, verbose=True):
+        stacked_matrix = sps.vstack([urm, icm.T], format="csr")
+        super().__init__(stacked_matrix, verbose=verbose)
 
 
 def create_shared_memory(a):

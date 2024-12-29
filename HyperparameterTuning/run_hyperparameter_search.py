@@ -29,6 +29,7 @@ from Recommenders.EASE_R.EASE_R_Recommender import EASE_R_Recommender
 from Recommenders.SLIM.Cython.SLIM_BPR_Cython import SLIM_BPR_Cython
 from Recommenders.SLIM.SLIMElasticNetRecommender import (
     SLIMElasticNetRecommender,
+    SLIMElasticNetICMRecommender,
     MultiThreadSLIM_SLIMElasticNetRecommender,
 )
 
@@ -393,6 +394,24 @@ def runHyperparameterSearch_Hybrid(
             )
 
         #########################################################################################################
+
+        if recommender_class is SLIMElasticNetICMRecommender:
+            hyperparameters_range_dictionary = {
+                "topK": Integer(5, 1000),
+                "l1_ratio": Real(low=1e-5, high=1.0, prior="log-uniform"),
+                "alpha": Real(low=1e-3, high=1.0, prior="uniform"),
+                "positive_only": Categorical([True, False]),
+            }
+
+            recommender_input_args = SearchInputRecommenderArgs(
+                CONSTRUCTOR_POSITIONAL_ARGS=[URM_train, ICM_object],
+                CONSTRUCTOR_KEYWORD_ARGS={},
+                FIT_POSITIONAL_ARGS=[],
+                FIT_KEYWORD_ARGS={
+                    "do_feature_selection": True,
+                },
+                EARLYSTOPPING_KEYWORD_ARGS={},
+            )
 
         if URM_train_last_test is not None:
             recommender_input_args_last_test = recommender_input_args.copy()
