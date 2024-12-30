@@ -546,8 +546,6 @@ class Evaluator(object):
 
 
 class EvaluatorHoldout(Evaluator):
-    """EvaluatorHoldout"""
-
     EVALUATOR_NAME = "EvaluatorHoldout"
 
     def __init__(
