@@ -7,6 +7,7 @@ from sklearn.model_selection import KFold
 
 from Data_manager.competition import load_raw
 from Recommenders.BaseRecommender import BaseRecommender
+from Recommenders.NonPersonalizedRecommender import TopPop
 from Recommenders.GraphBased.P3alphaRecommender import P3alphaRecommender
 from Recommenders.GraphBased.RP3betaRecommenderICM import RP3betaRecommenderICM
 from Recommenders.KNN.ItemKNN_CFCBF_Hybrid_Recommender import (
@@ -18,133 +19,133 @@ from Recommenders.SLIM.SLIMElasticNetRecommender import (
 )
 
 N_FOLDS = 10
-MODEL_DIR = Path() / "models" / "all"
+MODEL_DIR = Path() / "models" / "train" / "recall"
 
 HYPERPARAMETERS: dict[int, dict] = {
     # User-wide hybrid 1 (0-10)
-    0: {
-        "topK": 22,
-        "alpha": 0.015137951778257512,
-        "normalize_similarity": True,
-        "implicit": True,
-    },
-    1: {
-        "topK": 5,
-        "shrink": 774,
-        "similarity": "asymmetric",
-        "normalize": True,
-        "asymmetric_alpha": 0.0,
-        "feature_weighting": "TF-IDF",
-        "ICM_weight": 0.01,
-    },
-    2: {
-        "topK": 5,
-        "shrink": 1000,
-        "similarity": "asymmetric",
-        "normalize": True,
-        "asymmetric_alpha": 0.2626851799303072,
-        "feature_weighting": "TF-IDF",
-        "ICM_weight": 0.1560410093044209,
-    },
-    3: {
-        "topK": 1000,
-        "alpha": 1.8920160119169898,
-        "beta": 0.4950301468130674,
-        "delta": 0.30908791366521954,
-        "normalize_similarity": True,
-    },
-    4: {
-        "topK": 5,
-        "shrink": 1000,
-        "similarity": "asymmetric",
-        "normalize": True,
-        "asymmetric_alpha": 0.0,
-        "feature_weighting": "TF-IDF",
-        "ICM_weight": 0.06864228467890522,
-    },
-    5: {
-        "topK": 7,
-        "shrink": 293,
-        "similarity": "asymmetric",
-        "normalize": True,
-        "asymmetric_alpha": 0.0732688773175534,
-        "feature_weighting": "TF-IDF",
-        "ICM_weight": 0.23668747670276377,
-    },
-    6: {
-        "topK": 5,
-        "shrink": 1000,
-        "similarity": "asymmetric",
-        "normalize": True,
-        "asymmetric_alpha": 0.0,
-        "feature_weighting": "TF-IDF",
-        "ICM_weight": 0.06565478344525211,
-    },
-    7: {
-        "topK": 5,
-        "shrink": 0,
-        "similarity": "asymmetric",
-        "normalize": True,
-        "asymmetric_alpha": 0.0329315091653946,
-        "feature_weighting": "BM25",
-        "ICM_weight": 0.16124267891305158,
-    },
-    8: {
-        "topK": 5,
-        "shrink": 1000,
-        "similarity": "asymmetric",
-        "normalize": True,
-        "asymmetric_alpha": 0.0,
-        "feature_weighting": "TF-IDF",
-        "ICM_weight": 0.171628301912052,
-    },
-    9: {
-        "topK": 10,
-        "alpha": 0.35225624527493254,
-        "normalize_similarity": True,
-        "implicit": True,
-    },
-    10: {
-        "topK": 44,
-        "shrink": 473,
-        "similarity": "asymmetric",
-        "normalize": True,
-        "asymmetric_alpha": 0.35983197418129564,
-        "feature_weighting": "TF-IDF",
-        "ICM_weight": 0.12542629369630146,
-    },
-    20: {  # Item KNN CF+CBF
-        "topK": 96,
-        "shrink": 966,
-        "similarity": "cosine",
-        "normalize": True,
-        "feature_weighting": "BM25",
-        "ICM_weight": 0.015154282137075726,
-    },
-    21: {  # SLIM ElasticNet
-        "l1_ratio": 0.4408355927953408,
-        "alpha": 0.00013519978876092592,
-        "positive_only": False,
-        "topK": 59,
-        "do_feature_selection": True,
-    },
-    22: {  # RP3 ICM
-        "topK": 11,
-        "alpha": 1.9811525250064195,
-        "beta": 0.6832513917848906,
-        "delta": 0.0037274512973076712,
-        "normalize_similarity": True,
-        "implicit": True,
-        "min_rating": 1.0,
-    },
-    23: {  # Item KNN CF
-        "topK": 5,
-        "shrink": 224,
-        "similarity": "asymmetric",
-        "normalize": True,
-        "asymmetric_alpha": 0.0,
-        "feature_weighting": "TF-IDF",
-    },
+    # 0: {
+    #     "topK": 22,
+    #     "alpha": 0.015137951778257512,
+    #     "normalize_similarity": True,
+    #     "implicit": True,
+    # },
+    # 1: {
+    #     "topK": 5,
+    #     "shrink": 774,
+    #     "similarity": "asymmetric",
+    #     "normalize": True,
+    #     "asymmetric_alpha": 0.0,
+    #     "feature_weighting": "TF-IDF",
+    #     "ICM_weight": 0.01,
+    # },
+    # 2: {
+    #     "topK": 5,
+    #     "shrink": 1000,
+    #     "similarity": "asymmetric",
+    #     "normalize": True,
+    #     "asymmetric_alpha": 0.2626851799303072,
+    #     "feature_weighting": "TF-IDF",
+    #     "ICM_weight": 0.1560410093044209,
+    # },
+    # 3: {
+    #     "topK": 1000,
+    #     "alpha": 1.8920160119169898,
+    #     "beta": 0.4950301468130674,
+    #     "delta": 0.30908791366521954,
+    #     "normalize_similarity": True,
+    # },
+    # 4: {
+    #     "topK": 5,
+    #     "shrink": 1000,
+    #     "similarity": "asymmetric",
+    #     "normalize": True,
+    #     "asymmetric_alpha": 0.0,
+    #     "feature_weighting": "TF-IDF",
+    #     "ICM_weight": 0.06864228467890522,
+    # },
+    # 5: {
+    #     "topK": 7,
+    #     "shrink": 293,
+    #     "similarity": "asymmetric",
+    #     "normalize": True,
+    #     "asymmetric_alpha": 0.0732688773175534,
+    #     "feature_weighting": "TF-IDF",
+    #     "ICM_weight": 0.23668747670276377,
+    # },
+    # 6: {
+    #     "topK": 5,
+    #     "shrink": 1000,
+    #     "similarity": "asymmetric",
+    #     "normalize": True,
+    #     "asymmetric_alpha": 0.0,
+    #     "feature_weighting": "TF-IDF",
+    #     "ICM_weight": 0.06565478344525211,
+    # },
+    # 7: {
+    #     "topK": 5,
+    #     "shrink": 0,
+    #     "similarity": "asymmetric",
+    #     "normalize": True,
+    #     "asymmetric_alpha": 0.0329315091653946,
+    #     "feature_weighting": "BM25",
+    #     "ICM_weight": 0.16124267891305158,
+    # },
+    # 8: {
+    #     "topK": 5,
+    #     "shrink": 1000,
+    #     "similarity": "asymmetric",
+    #     "normalize": True,
+    #     "asymmetric_alpha": 0.0,
+    #     "feature_weighting": "TF-IDF",
+    #     "ICM_weight": 0.171628301912052,
+    # },
+    # 9: {
+    #     "topK": 10,
+    #     "alpha": 0.35225624527493254,
+    #     "normalize_similarity": True,
+    #     "implicit": True,
+    # },
+    # 10: {
+    #     "topK": 44,
+    #     "shrink": 473,
+    #     "similarity": "asymmetric",
+    #     "normalize": True,
+    #     "asymmetric_alpha": 0.35983197418129564,
+    #     "feature_weighting": "TF-IDF",
+    #     "ICM_weight": 0.12542629369630146,
+    # },
+    # 20: {  # Item KNN CF+CBF
+    #     "topK": 96,
+    #     "shrink": 966,
+    #     "similarity": "cosine",
+    #     "normalize": True,
+    #     "feature_weighting": "BM25",
+    #     "ICM_weight": 0.015154282137075726,
+    # },
+    # 21: {  # SLIM ElasticNet
+    #     "l1_ratio": 0.4408355927953408,
+    #     "alpha": 0.00013519978876092592,
+    #     "positive_only": False,
+    #     "topK": 59,
+    #     "do_feature_selection": True,
+    # },
+    # 22: {  # RP3 ICM
+    #     "topK": 11,
+    #     "alpha": 1.9811525250064195,
+    #     "beta": 0.6832513917848906,
+    #     "delta": 0.0037274512973076712,
+    #     "normalize_similarity": True,
+    #     "implicit": True,
+    #     "min_rating": 1.0,
+    # },
+    # 23: {  # Item KNN CF
+    #     "topK": 5,
+    #     "shrink": 224,
+    #     "similarity": "asymmetric",
+    #     "normalize": True,
+    #     "asymmetric_alpha": 0.0,
+    #     "feature_weighting": "TF-IDF",
+    # },
     # User-wide hybrid 2 (30-40)
     # 30: {
     #     "topK": 1000,
@@ -225,26 +226,76 @@ HYPERPARAMETERS: dict[int, dict] = {
     #     "feature_weighting": "TF-IDF",
     #     "ICM_weight": 0.12542629369630146,
     # },
+    # Score hybrid
+    # 50: {  # RP3 ICM
+    #     "topK": 79,
+    #     "alpha": 0.7864757238135991,
+    #     "beta": 0.443333110568691,
+    #     "delta": 0.7593249588588719,
+    #     "min_rating": 0.008553401844836345,
+    #     "implicit": True,
+    #     "normalize_similarity": True,
+    # },
+    # 51: {  # SLIM ElasticNet
+    #     "l1_ratio": 0.04077479852537514,
+    #     "alpha": 0.0004098922954204119,
+    #     "positive_only": True,
+    #     "topK": 144,
+    #     "do_feature_selection": True,
+    # },
+    # Recall optimised models
+    60: {  # SLIM ElasticNet
+        "topK": 1000,
+        "l1_ratio": 0.009196376132404047,
+        "alpha": 0.001,
+        "positive_only": True,
+        "do_feature_selection": True,
+    },
+    61: {  # Item KNN CF+CBF
+        "topK": 5,
+        "shrink": 1000,
+        "similarity": "asymmetric",
+        "normalize": True,
+        "asymmetric_alpha": 0.0,
+        "feature_weighting": "TF-IDF",
+        "ICM_weight": 0.1918507776404466,
+    },
+    62: {  # Item KNN CF
+        "topK": 5,
+        "shrink": 1000,
+        "similarity": "asymmetric",
+        "normalize": True,
+        "asymmetric_alpha": 0.12250234857130494,
+        "feature_weighting": "TF-IDF",
+    },
+    63: {  # RP3 ICM
+        "topK": 556,
+        "alpha": 2.0,
+        "beta": 0.43088991464943555,
+        "delta": 0.0,
+        "normalize_similarity": True,
+    },
+    64: {}  # Top Popular
 }
 
 
 def recommender_factory(urm, icm) -> dict[int, BaseRecommender]:
     return {
-        0: P3alphaRecommender(urm),
-        1: ItemKNN_CFCBF_Hybrid_Recommender(urm, icm),
-        2: ItemKNN_CFCBF_Hybrid_Recommender(urm, icm),
-        3: RP3betaRecommenderICM(urm, icm),
-        4: ItemKNN_CFCBF_Hybrid_Recommender(urm, icm),
-        5: ItemKNN_CFCBF_Hybrid_Recommender(urm, icm),
-        6: ItemKNN_CFCBF_Hybrid_Recommender(urm, icm),
-        7: ItemKNN_CFCBF_Hybrid_Recommender(urm, icm),
-        8: ItemKNN_CFCBF_Hybrid_Recommender(urm, icm),
-        9: P3alphaRecommender(urm),
-        10: ItemKNN_CFCBF_Hybrid_Recommender(urm, icm),
-        20: ItemKNN_CFCBF_Hybrid_Recommender(urm, icm),
-        21: SLIMElasticNetRecommender(urm),
-        22: RP3betaRecommenderICM(urm, icm),
-        23: ItemKNNCFRecommender(urm),
+        # 0: P3alphaRecommender(urm),
+        # 1: ItemKNN_CFCBF_Hybrid_Recommender(urm, icm),
+        # 2: ItemKNN_CFCBF_Hybrid_Recommender(urm, icm),
+        # 3: RP3betaRecommenderICM(urm, icm),
+        # 4: ItemKNN_CFCBF_Hybrid_Recommender(urm, icm),
+        # 5: ItemKNN_CFCBF_Hybrid_Recommender(urm, icm),
+        # 6: ItemKNN_CFCBF_Hybrid_Recommender(urm, icm),
+        # 7: ItemKNN_CFCBF_Hybrid_Recommender(urm, icm),
+        # 8: ItemKNN_CFCBF_Hybrid_Recommender(urm, icm),
+        # 9: P3alphaRecommender(urm),
+        # 10: ItemKNN_CFCBF_Hybrid_Recommender(urm, icm),
+        # 20: ItemKNN_CFCBF_Hybrid_Recommender(urm, icm),
+        # 21: SLIMElasticNetRecommender(urm),
+        # 22: RP3betaRecommenderICM(urm, icm),
+        # 23: ItemKNNCFRecommender(urm),
         # 30: SLIMElasticNetRecommender(urm),
         # 31: SLIMElasticNetRecommender(urm),
         # 32: SLIMElasticNetRecommender(urm),
@@ -256,6 +307,13 @@ def recommender_factory(urm, icm) -> dict[int, BaseRecommender]:
         # 38: SLIMElasticNetRecommender(urm),
         # 39: SLIMElasticNetRecommender(urm),
         # 40: ItemKNN_CFCBF_Hybrid_Recommender(urm, icm),
+        # 50: RP3betaRecommenderICM(urm, icm),
+        # 51: SLIMElasticNetRecommender(urm),
+        60: SLIMElasticNetRecommender(urm),
+        61: ItemKNN_CFCBF_Hybrid_Recommender(urm, icm),
+        62: ItemKNNCFRecommender(urm),
+        63: RP3betaRecommenderICM(urm, icm),
+        64: TopPop(urm),
     }
 
 
@@ -285,7 +343,9 @@ if __name__ == "__main__":
 
         fold_recommenders = recommender_factory(fold_urm, icm)
         for j, (key, recommender) in enumerate(fold_recommenders.items()):
-            print(f"Fold {str(i).zfill(2)} Recommender {str(j).zfill(2)} {datetime.now()}")
+            print(
+                f"Fold {str(i).zfill(2)} Recommender {str(j).zfill(2)} {datetime.now()}"
+            )
             recommender.fit(**HYPERPARAMETERS[key])
             with (fold_dir / f"{key}.pkl").open("wb") as f:
                 pickle.dump(recommender, f)
