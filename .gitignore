@@ -3,6 +3,7 @@
 *.json
 *.pkl
 *.npz
+*.parquet
 *result*
 
 # Byte-compiled / optimized / DLL files
