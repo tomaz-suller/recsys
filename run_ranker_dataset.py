@@ -21,6 +21,9 @@ OUTPUT_PATH = Path() / f"ranker_{USE}_data_test.parquet"
 NUMBER_FOLDS = None
 CUTOFF = 10
 
+ITEM_LATENT_DIMENSIONS = 5
+USER_LATENT_DIMENSIONS = 5
+
 MODELS_BASE_DIR = Path() / "models"
 TRAIN_MODELS_DIR = MODELS_BASE_DIR / "train" / "map"
 SUBMISSION_MODELS_DIR = MODELS_BASE_DIR / "all" / "map" / "0"
@@ -39,6 +42,10 @@ MODELS_TO_USE = None
 MULTIPLE_SCORE_HYBRID_WEIGHTS = {
     50: 0.253770701546336,
     51: 0.10324855050317669,
+}
+
+SVD_FIT_PARAMS = {
+    "num_factors": 350,
 }
 
 
@@ -260,6 +267,8 @@ def compute_dataset(
 
 
 def add_features(dataset: pd.DataFrame, urm: sps.csr_matrix, icm: sps.csr_matrix):
+    svd = PureSVDRecommender(urm)
+    svd.fit(**SVD_FIT_PARAMS)
     # Item features
 
     ## Item popularity
@@ -281,6 +290,12 @@ def add_features(dataset: pd.DataFrame, urm: sps.csr_matrix, icm: sps.csr_matrix
     mean_item_similarity
 
     dataset = dataset.join(mean_item_similarity, on="ItemID")
+
+    ## Singular vectors
+    for i in range(ITEM_LATENT_DIMENSIONS):
+        dataset[f"item_svd_{i}"] = svd.ITEM_factors[
+            dataset["ItemID"].to_numpy().astype(int), i
+        ]
 
     # User features
 
@@ -328,6 +343,12 @@ def add_features(dataset: pd.DataFrame, urm: sps.csr_matrix, icm: sps.csr_matrix
     mean_user_similarity
 
     dataset = dataset.join(mean_user_similarity, on="UserID")
+
+    ## Singular vectors
+    for i in range(USER_LATENT_DIMENSIONS):
+        dataset[f"user_svd_{i}"] = svd.USER_factors[
+            dataset["UserID"].to_numpy().astype(int), i
+        ]
 
     return dataset
 
