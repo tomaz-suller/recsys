@@ -15,29 +15,37 @@ from Recommenders.Hybrid import (
     UserWideHybridRecommender,
 )
 from Recommenders.Similarity.Compute_Similarity import Compute_Similarity
+from Recommenders.MatrixFactorization.PureSVDRecommender import PureSVDRecommender
 
 USE = "training"
-OUTPUT_PATH = Path() / f"ranker_{USE}_data_test.parquet"
-NUMBER_FOLDS = None
+NUMBER_FOLDS = 10
 CUTOFF = 10
+
+TOP_POPULAR_THRESHOLDS = (10, 100, 1000)
 
 ITEM_LATENT_DIMENSIONS = 5
 USER_LATENT_DIMENSIONS = 5
+
+# MODELS_TO_USE = None
+MODELS_TO_USE = (
+    20,
+    21,
+    22,
+    23,
+)
+USE_SCORE_HYBRID = True
+USE_USER_HYBRID = True
+USER_WIDE_HYBRID_BEGIN = 30
+
+EXPERIMENT = "5_latent_vectors"
+
+OUTPUT_PATH = Path() / f"ranker_{USE}_data_{EXPERIMENT}.parquet"
 
 MODELS_BASE_DIR = Path() / "models"
 TRAIN_MODELS_DIR = MODELS_BASE_DIR / "train" / "map"
 SUBMISSION_MODELS_DIR = MODELS_BASE_DIR / "all" / "map" / "0"
 
-USER_WIDE_HYBRID_BEGIN = 30
 NUMBER_GROUPS_USER_WIDE_HYBRID = 10
-
-MODELS_TO_USE = None
-# MODELS_TO_USE = (
-#     60,
-#     61,
-#     62,
-#     63,
-# )
 
 MULTIPLE_SCORE_HYBRID_WEIGHTS = {
     50: 0.253770701546336,
@@ -226,7 +234,7 @@ def compute_training_dataset(
             fold_models_dir,
             use_only=MODELS_TO_USE,
             with_user_hybrid=True,
-            with_score_hybrid=False,
+            with_score_hybrid=True,
         )
 
         fold_training_dataset = compute_base_dataset(
@@ -279,7 +287,6 @@ def add_features(dataset: pd.DataFrame, urm: sps.csr_matrix, icm: sps.csr_matrix
     ]
 
     ## Distance to closest items
-
     item_similarity = Compute_Similarity(icm.T).compute_similarity()
     item_similarity
 
@@ -300,7 +307,6 @@ def add_features(dataset: pd.DataFrame, urm: sps.csr_matrix, icm: sps.csr_matrix
     # User features
 
     ## User popularity
-
     user_popularity = np.ediff1d(sps.csr_matrix(urm).indptr)
 
     dataset["user_profile_len"] = user_popularity[
@@ -309,14 +315,11 @@ def add_features(dataset: pd.DataFrame, urm: sps.csr_matrix, icm: sps.csr_matrix
 
     ## User popularity bias
     # (measure of how much popularity influences the user)
-
     item_popularity_ranking = item_popularity.argsort()[::-1]
     item_popularity_ranking
 
     item_id_df = urm_df[["user_id", "item_id"]]
     item_id_df
-
-    TOP_POPULAR_THRESHOLDS = (10, 100, 1000)
 
     for k in TOP_POPULAR_THRESHOLDS:
         top_k_popular = item_popularity_ranking[:k]
@@ -332,7 +335,6 @@ def add_features(dataset: pd.DataFrame, urm: sps.csr_matrix, icm: sps.csr_matrix
     dataset = dataset.join(user_top_k_df, on="UserID")
 
     ## Distance to closest users
-
     user_similarity = Compute_Similarity(urm.T).compute_similarity()
     user_similarity
 
