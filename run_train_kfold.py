@@ -243,44 +243,77 @@ HYPERPARAMETERS: dict[int, dict] = {
     #     "topK": 144,
     #     "do_feature_selection": True,
     # },
-    # Recall optimised models
-    60: {  # SLIM ElasticNet
-        "topK": 1000,
-        "l1_ratio": 0.009196376132404047,
-        "alpha": 0.001,
-        "positive_only": True,
+    # Recall@10 optimised models
+    # 60: {  # SLIM ElasticNet
+    #     "topK": 1000,
+    #     "l1_ratio": 0.009196376132404047,
+    #     "alpha": 0.001,
+    #     "positive_only": True,
+    #     "do_feature_selection": True,
+    # },
+    # 61: {  # Item KNN CF+CBF
+    #     "topK": 5,
+    #     "shrink": 1000,
+    #     "similarity": "asymmetric",
+    #     "normalize": True,
+    #     "asymmetric_alpha": 0.0,
+    #     "feature_weighting": "TF-IDF",
+    #     "ICM_weight": 0.1918507776404466,
+    # },
+    # 62: {  # Item KNN CF
+    #     "topK": 5,
+    #     "shrink": 1000,
+    #     "similarity": "asymmetric",
+    #     "normalize": True,
+    #     "asymmetric_alpha": 0.12250234857130494,
+    #     "feature_weighting": "TF-IDF",
+    # },
+    # 63: {  # RP3 ICM
+    #     "topK": 556,
+    #     "alpha": 2.0,
+    #     "beta": 0.43088991464943555,
+    #     "delta": 0.0,
+    #     "normalize_similarity": True,
+    # },
+    # 64: {},  # Top Popular
+    # Recall@50 optimised models
+    70: {  # Item KNN CF
+        "topK": 152,
+        "shrink": 1000,
+        "similarity": "asymmetric",
+        "normalize": True,
+        "asymmetric_alpha": 0.2696194971486583,
+        "feature_weighting": "TF-IDF",
+    },
+    71: {  # Item KNN CF+CBF
+        "topK": 43,
+        "shrink": 937,
+        "similarity": "asymmetric",
+        "normalize": True,
+        "asymmetric_alpha": 0.45165257781514373,
+        "feature_weighting": "TF-IDF",
+        "ICM_weight": 0.3749251701759684,
+    },
+    72: {  # SLIM ElasticNet
+        "l1_ratio": 0.14747318214902194,
+        "alpha": 0.00043480530562990655,
+        "positive_only": False,
+        "topK": 75,
         "do_feature_selection": True,
     },
-    61: {  # Item KNN CF+CBF
-        "topK": 5,
-        "shrink": 1000,
-        "similarity": "asymmetric",
-        "normalize": True,
-        "asymmetric_alpha": 0.0,
-        "feature_weighting": "TF-IDF",
-        "ICM_weight": 0.1918507776404466,
-    },
-    62: {  # Item KNN CF
-        "topK": 5,
-        "shrink": 1000,
-        "similarity": "asymmetric",
-        "normalize": True,
-        "asymmetric_alpha": 0.12250234857130494,
-        "feature_weighting": "TF-IDF",
-    },
-    63: {  # RP3 ICM
-        "topK": 556,
-        "alpha": 2.0,
-        "beta": 0.43088991464943555,
-        "delta": 0.0,
+    73: {  # RP3 ICM
+        "topK": 351,
+        "alpha": 1.8421852767137328,
+        "beta": 0.26321333084561177,
+        "delta": 0.27195701300859715,
         "normalize_similarity": True,
     },
-    64: {}  # Top Popular
 }
 
 
 def recommender_factory(urm, icm) -> dict[int, BaseRecommender]:
     return {
+        # User-wide hybrid 1 (0-10)
         # 0: P3alphaRecommender(urm),
         # 1: ItemKNN_CFCBF_Hybrid_Recommender(urm, icm),
         # 2: ItemKNN_CFCBF_Hybrid_Recommender(urm, icm),
@@ -296,6 +329,7 @@ def recommender_factory(urm, icm) -> dict[int, BaseRecommender]:
         # 21: SLIMElasticNetRecommender(urm),
         # 22: RP3betaRecommenderICM(urm, icm),
         # 23: ItemKNNCFRecommender(urm),
+        # User-wide hybrid 2 (30-40)
         # 30: SLIMElasticNetRecommender(urm),
         # 31: SLIMElasticNetRecommender(urm),
         # 32: SLIMElasticNetRecommender(urm),
@@ -307,13 +341,20 @@ def recommender_factory(urm, icm) -> dict[int, BaseRecommender]:
         # 38: SLIMElasticNetRecommender(urm),
         # 39: SLIMElasticNetRecommender(urm),
         # 40: ItemKNN_CFCBF_Hybrid_Recommender(urm, icm),
+        # Score hybrid
         # 50: RP3betaRecommenderICM(urm, icm),
         # 51: SLIMElasticNetRecommender(urm),
-        60: SLIMElasticNetRecommender(urm),
-        61: ItemKNN_CFCBF_Hybrid_Recommender(urm, icm),
-        62: ItemKNNCFRecommender(urm),
-        63: RP3betaRecommenderICM(urm, icm),
-        64: TopPop(urm),
+        # Recall@10 optimised models
+        # 60: SLIMElasticNetRecommender(urm),
+        # 61: ItemKNN_CFCBF_Hybrid_Recommender(urm, icm),
+        # 62: ItemKNNCFRecommender(urm),
+        # 63: RP3betaRecommenderICM(urm, icm),
+        # 64: TopPop(urm),
+        # Recall@50 optimised models
+        70: ItemKNNCFRecommender(urm),
+        71: ItemKNN_CFCBF_Hybrid_Recommender(urm, icm),
+        72: SLIMElasticNetRecommender(urm),
+        73: RP3betaRecommenderICM(urm, icm),
     }
 
 
