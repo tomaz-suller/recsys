@@ -37,6 +37,7 @@ from Recommenders.SLIM.SLIMElasticNetRecommender import (
 from Recommenders.MatrixFactorization.PureSVDRecommender import (
     PureSVDRecommender,
     PureSVDItemRecommender,
+    ScaledPureSVDRecommender,
 )
 from Recommenders.MatrixFactorization.Cython.MatrixFactorizationImpressions_Cython import (
     MatrixFactorization_FunkSVD_Cython,
@@ -106,7 +107,7 @@ def runHyperparameterSearch_FeatureWeighting(
     cutoff_to_optimize=None,
     evaluator_validation_earlystopping=None,
     resume_from_saved=False,
-    save_model="best",
+    save_model="no",
     output_folder_path="result_experiments/",
     similarity_type_list=None,
 ):
@@ -229,7 +230,7 @@ def runHyperparameterSearch_Hybrid(
     n_cases=None,
     n_random_starts=None,
     resume_from_saved=False,
-    save_model="best",
+    save_model="no",
     evaluate_on_test="best",
     max_total_time=None,
     evaluator_validation_earlystopping=None,
@@ -551,7 +552,7 @@ def runHyperparameterSearch_Content(
     n_cases=None,
     n_random_starts=None,
     resume_from_saved=False,
-    save_model="best",
+    save_model="no",
     evaluate_on_test="best",
     max_total_time=None,
     evaluator_validation=None,
@@ -671,7 +672,7 @@ def runHyperparameterSearch_Collaborative(
     n_cases=None,
     n_random_starts=None,
     resume_from_saved=False,
-    save_model="best",
+    save_model="no",
     evaluate_on_test="best",
     max_total_time=None,
     evaluator_validation=None,
@@ -992,6 +993,23 @@ def runHyperparameterSearch_Collaborative(
         if recommender_class is PureSVDRecommender:
             hyperparameters_range_dictionary = {
                 "num_factors": Integer(1, 350),
+            }
+
+            recommender_input_args = SearchInputRecommenderArgs(
+                CONSTRUCTOR_POSITIONAL_ARGS=[URM_train],
+                CONSTRUCTOR_KEYWORD_ARGS={},
+                FIT_POSITIONAL_ARGS=[],
+                FIT_KEYWORD_ARGS={},
+                EARLYSTOPPING_KEYWORD_ARGS={},
+            )
+
+        ##########################################################################################################
+
+        if recommender_class is ScaledPureSVDRecommender:
+            hyperparameters_range_dictionary = {
+                "num_factors": Integer(1, 350),
+                "scaling_items": Real(0.0, 1.0, prior="uniform"),
+                "scaling_users": Real(0.0, 1.0, prior="uniform"),
             }
 
             recommender_input_args = SearchInputRecommenderArgs(
