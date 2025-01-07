@@ -233,8 +233,8 @@ def compute_training_dataset(
             fold_urm_train,
             fold_models_dir,
             use_only=MODELS_TO_USE,
-            with_user_hybrid=True,
-            with_score_hybrid=True,
+            with_user_hybrid=USE_USER_HYBRID,
+            with_score_hybrid=USE_SCORE_HYBRID,
         )
 
         fold_training_dataset = compute_base_dataset(
