@@ -5,6 +5,7 @@ from typing import Literal, Optional
 import numpy as np
 import pandas as pd
 import scipy.sparse as sps
+from scipy.stats import kurtosis, skew
 from sklearn.model_selection import KFold, ShuffleSplit
 from tqdm import tqdm
 
@@ -88,6 +89,17 @@ def urm_df_to_csr(
     )
 
 
+def row_statistics(df: pd.DataFrame, like: str) -> pd.DataFrame:
+    df = df.filter(like=like)
+    statistics_df = pd.DataFrame([], index=df.index)
+    statistics_df[f"{like}_mean"] = df.mean(axis="columns")
+    statistics_df[f"{like}_std"] = df.std(axis="columns")
+    statistics_df[f"{like}_min"] = df.min(axis="columns")
+    statistics_df[f"{like}_max"] = df.max(axis="columns")
+    statistics_df[f"{like}_kurtosis"] = kurtosis(df, axis=1)
+    statistics_df[f"{like}_skew"] = skew(df, axis=1)
+    return statistics_df
+
 def compute_base_dataset(
     number_users: int,
     models: dict[str, BaseRecommender],
@@ -145,7 +157,10 @@ def compute_base_dataset(
                 [user_id], items_to_compute=item_list
             )
 
-            dataset.loc[user_id, rec_label] = all_item_scores[0, item_list]
+            dataset.loc[user_id, f"score_{rec_label}"] = all_item_scores[0, item_list]
+
+    score_statistics = row_statistics(dataset, "score")
+    dataset = pd.concat([dataset, score_statistics], axis="columns")
 
     dataset = dataset.reset_index()
     dataset = dataset.rename(columns={"index": "UserID"})
