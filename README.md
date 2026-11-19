@@ -69,21 +69,36 @@ Because the repository contains multiple experimental notebooks using different 
 All experimental work, model exploration, ensembling, and reranking pipelines can be inspected in the repository's `.ipynb` notebooks and root scripts:
 
 ### Core Challenge Notebooks
-| Notebook | Description |
-| :--- | :--- |
-| [`7-tomaz-suller-xgboost.ipynb`](7-tomaz-suller-xgboost.ipynb) | End-to-end **XGBoost Reranker (`XGBRanker`)** pipeline: 10-fold candidate generation, feature engineering (popularity bias, similarity, ensemble score statistics), pairwise ranking training, feature importance analysis, and Optuna hyperparameter tuning. |
-| [`8-tomaz-suller-gabs-code.ipynb`](8-tomaz-suller-gabs-code.ipynb) | Exploration, evaluation, and Optuna hyperparameter search across `P3alpha`, `RP3beta`, `ItemKNN`, `SLIM ElasticNet`, `MultVAE`, and `LightFM`. |
-| [`9-tomaz-suller-submission.ipynb`](9-tomaz-suller-submission.ipynb) | **Ensemble & submission pipeline** combining single models, binary/multi-score hybrids (`ScoresMultipleHybridRecommender`), and user-stratified ensembles (`UserWideHybridRecommender`). |
-| [`GabsNotebook.ipynb`](GabsNotebook.ipynb) | Comprehensive experimentation notebook covering data splitting, collaborative/content-based filtering, neural models, and hybrid prototyping. |
-| [`Hybrid_RP3_ICM+SlimEN_Recall.ipynb`](Hybrid_RP3_ICM+SlimEN_Recall.ipynb) | Recall-oriented hybridization of $\text{RP}^3_\beta$ (with ICM) and `SLIM ElasticNet` for candidate generation. |
-| [`XGBoostTestREC.ipynb`](XGBoostTestREC.ipynb) & [`notebooks/XGBoostTest.ipynb`](notebooks/XGBoostTest.ipynb) | Prototyping notebooks for candidate extraction, target encoding, sparse feature construction, and `XGBRanker` training. |
+| Notebook | Primary Author(s) | Description |
+| :--- | :--- | :--- |
+| [`7-tomaz-suller-xgboost.ipynb`](7-tomaz-suller-xgboost.ipynb) | Tomaz Maia Suller | End-to-end **XGBoost Reranker (`XGBRanker`)** pipeline: 10-fold candidate generation, feature engineering (popularity bias, similarity, ensemble score statistics), pairwise ranking training, feature importance analysis, and Optuna hyperparameter tuning. |
+| [`8-tomaz-suller-gabs-code.ipynb`](8-tomaz-suller-gabs-code.ipynb) | Gabriele Bandino & Tomaz Maia Suller | Exploration, evaluation, and Optuna hyperparameter search across `P3alpha`, `RP3beta`, `ItemKNN`, `SLIM ElasticNet`, `MultVAE`, and `LightFM`. |
+| [`9-tomaz-suller-submission.ipynb`](9-tomaz-suller-submission.ipynb) | Tomaz Maia Suller | **Ensemble & submission pipeline** combining single models, binary/multi-score hybrids (`ScoresMultipleHybridRecommender`), and user-stratified ensembles (`UserWideHybridRecommender`). |
+| [`GabsNotebook.ipynb`](GabsNotebook.ipynb) | Gabriele Bandino | Comprehensive experimentation notebook covering data splitting, collaborative/content-based filtering, neural models (`MultVAE`, `LightFM`), Optuna tuning, and hybrid prototyping. |
+| [`Hybrid_RP3_ICM+SlimEN_Recall.ipynb`](Hybrid_RP3_ICM+SlimEN_Recall.ipynb) | Gabriele Bandino | Recall-oriented hybridization of $\text{RP}^3_\beta$ (with ICM) and `SLIM ElasticNet` for candidate generation. |
+| [`XGBoostTestREC.ipynb`](XGBoostTestREC.ipynb) & [`notebooks/XGBoostTest.ipynb`](notebooks/XGBoostTest.ipynb) | Gabriele Bandino | Initial **XGBoost Reranker (`XGBRanker`)** prototyping notebooks for candidate extraction, target encoding, sparse feature construction, and pairwise learning-to-rank. |
 
 ### Automation & Training Scripts
-- [`run_train_kfold.py`](run_train_kfold.py) — Parallelized 10-fold training of recall- and MAP-optimized candidate models (`ItemKNNCF`, `ItemKNN_CFCBF`, `SLIMElasticNet`, `RP3betaICM`, `P3alpha`) and user-stratified hybrids.
-- [`run_ranker_dataset.py`](run_ranker_dataset.py) — Constructs the training and submission `.parquet` datasets for `XGBRanker`, computing ensemble agreement, score distribution moments, `PureSVD` latent factors, and user/item similarity features.
-- [`user_hybrid_hyperparameter_search.py`](user_hybrid_hyperparameter_search.py) — Tunes recommenders independently across user profile-length groups using Optuna.
-- [`run_score_hybrid_optimisation.py`](run_score_hybrid_optimisation.py) — Optimizes blending weights for `ScoresMultipleHybridRecommender`.
-- [`run_hyperparameter_search.py`](run_hyperparameter_search.py) — Automated Optuna hyperparameter tuning for individual recommenders.
+- [`run_train_kfold.py`](run_train_kfold.py) *(Tomaz Maia Suller)* — Parallelized 10-fold training of recall- and MAP-optimized candidate models (`ItemKNNCF`, `ItemKNN_CFCBF`, `SLIMElasticNet`, `RP3betaICM`, `P3alpha`) and user-stratified hybrids.
+- [`run_ranker_dataset.py`](run_ranker_dataset.py) *(Tomaz Maia Suller)* — Constructs the training and submission `.parquet` datasets for `XGBRanker`, computing ensemble agreement, score distribution moments, `PureSVD` latent factors, and user/item similarity features.
+- [`user_hybrid_hyperparameter_search.py`](user_hybrid_hyperparameter_search.py) *(Tomaz Maia Suller)* — Tunes recommenders independently across user profile-length groups using Optuna.
+- [`run_score_hybrid_optimisation.py`](run_score_hybrid_optimisation.py) *(Tomaz Maia Suller)* — Optimizes blending weights for `ScoresMultipleHybridRecommender`.
+- [`run_hyperparameter_search.py`](run_hyperparameter_search.py) *(Tomaz Maia Suller)* — Automated Optuna hyperparameter tuning for individual recommenders.
+
+---
+
+## Authors & Individual Contributions
+
+- **Gabriele Bandino ([@Gabrielebandino](https://github.com/Gabrielebandino))**
+  - Designed and implemented the **Tripartite Graph $\text{RP}^3_\beta$ with Item Content Matrix** ([`Recommenders/GraphBased/RP3betaRecommenderICM.py`](Recommenders/GraphBased/RP3betaRecommenderICM.py)), extending graph-based random walks to jointly leverage user–item interactions (`URM`) and book metadata features (`ICM`).
+  - Developed custom graph + neighborhood hybrids ([`Recommenders/GabsHybridTesting/HybridRP3KNN.py`](Recommenders/GabsHybridTesting/HybridRP3KNN.py)) and the **Recall@10-optimized $\text{RP}^3_\beta\text{-ICM}$ + `SLIM ElasticNet` hybrid** ([`Hybrid_RP3_ICM+SlimEN_Recall.ipynb`](Hybrid_RP3_ICM+SlimEN_Recall.ipynb)).
+  - Led exploratory experimentation and Optuna hyperparameter optimization across collaborative, content-based, matrix factorization, and deep learning recommenders (`MultVAE`, `LightFM`, `SLIM ElasticNet`, `ItemKNN`, `P3alpha`, `RP3beta`) in [`GabsNotebook.ipynb`](GabsNotebook.ipynb) and [`8-tomaz-suller-gabs-code.ipynb`](8-tomaz-suller-gabs-code.ipynb).
+  - Prototyped the initial **two-stage `XGBRanker` reranking and feature-engineering pipeline** ([`XGBoostTestREC.ipynb`](XGBoostTestREC.ipynb), [`notebooks/XGBoostTest.ipynb`](notebooks/XGBoostTest.ipynb)).
+
+- **Tomaz Maia Suller ([@tomaz-suller](https://github.com/tomaz-suller))**
+  - Architected the competition dataset manager and splitting utilities ([`Data_manager/competition.py`](Data_manager/competition.py)) and parallelized hyperparameter tuning scripts ([`run_hyperparameter_search.py`](run_hyperparameter_search.py), [`user_hybrid_hyperparameter_search.py`](user_hybrid_hyperparameter_search.py), [`run_score_hybrid_optimisation.py`](run_score_hybrid_optimisation.py)).
+  - Implemented the modular ensemble framework in [`Recommenders/Hybrid.py`](Recommenders/Hybrid.py) (`ScoresHybridRecommender`, `ScoresMultipleHybridRecommender`, and the 10-bucket user-profile stratified `UserWideHybridRecommender`) and the ensemble submission workflow ([`9-tomaz-suller-submission.ipynb`](9-tomaz-suller-submission.ipynb)).
+  - Engineered the **10-fold out-of-fold candidate training pipeline** ([`run_train_kfold.py`](run_train_kfold.py)), the **automated ranker dataset builder & statistical feature extractor** ([`run_ranker_dataset.py`](run_ranker_dataset.py) — ensemble agreement, score distribution moments, `PureSVD` latent factors, and popularity-bias metrics), and the scaled **`XGBRanker` training & Optuna CV pipeline** ([`7-tomaz-suller-xgboost.ipynb`](7-tomaz-suller-xgboost.ipynb)).
 
 ---
 
