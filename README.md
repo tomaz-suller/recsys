@@ -49,6 +49,21 @@ To move beyond linear score blending, we built a **two-stage learning-to-rank pi
 
 ---
 
+## Evaluation & Metric Notes
+
+Because the repository contains multiple experimental notebooks using different data splits and evaluation denominators, care must be taken when comparing reported scores across notebooks:
+
+1. **Single Models & Hybrids ([`9-tomaz-suller-submission.ipynb`](9-tomaz-suller-submission.ipynb), [`GabsNotebook.ipynb`](GabsNotebook.ipynb)):**
+   - Evaluated via `EvaluatorHoldout` on a **70% train / 10% validation / 20% test** holdout split (`seed=1234`, evaluating on `33,827` users with $\ge 1$ holdout interaction).
+   - `EvaluatorHoldout` reports two variants at cutoff $k=10$:
+     - `MAP` (dividing by fixed cutoff $k=10$): hybrids reach **~0.0227–0.0229**.
+     - `MAP_MIN_DEN` (dividing by $\min(|\text{ground truth}|, k)$): hybrids reach **~0.0557–0.0558** (and up to **0.0594** on individual user-profile buckets).
+2. **XGBoost Reranker Metrics ([`7-tomaz-suller-xgboost.ipynb`](7-tomaz-suller-xgboost.ipynb)):**
+   - **Internal Training Log (`validation_0-map@10 ≈ 0.60`):** This is XGBoost's internal group-level metric measured *only within each user's candidate rows* prior to item deduplication. It is an internal optimization objective, **not** a catalog-wide recommendation score.
+   - **Post-Deduplication Fold Score (`0.0877` in Cell 81):** Computed on **Fold 9 of a 10-fold CV split** (90% train / 10% validation, `random_state=42`) using the $\min(|\text{actual}|, 10)$ denominator (`map_at_k`). Because `decode_targets(X_val, y_val)` constructs the ground-truth dictionary from positive rows inside `X_val`, it evaluates over the **`18,456` users who have at least one relevant item retrieved in their candidate pool** (recall-conditioned reranking MAP@10). Because both the underlying train/validation split (90/10 vs. 70/10/20) and the evaluated user subset differ, `0.0877` is not directly comparable to the full-catalog `EvaluatorHoldout` scores in `GabsNotebook.ipynb` and `9-tomaz-suller-submission.ipynb`.
+
+---
+
 ## Notebooks & Key Scripts
 
 All experimental work, model exploration, ensembling, and reranking pipelines can be inspected in the repository's `.ipynb` notebooks and root scripts:
